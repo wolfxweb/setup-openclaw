@@ -1,23 +1,20 @@
-# 🚀 OpenClaw - Instalador Docker Simples
+# 🚀 OpenClaw - Instalador Oficial Simplificado
 
-Instalador minimalista para OpenClaw rodando 100% em Docker.
+Instalador wrapper que facilita o uso do instalador oficial do OpenClaw.
 
 ## ✨ O que este instalador faz
 
-- ✅ Instala Docker (se necessário)
-- ✅ Configura OpenClaw em containers
-- ✅ Gera credenciais seguras automaticamente
-- ✅ Configura permissões corretas
-- ✅ Instalação simples e direta
+- ✅ Verifica e instala Docker automaticamente
+- ✅ Limpa instalações anteriores
+- ✅ Prepara o ambiente (diretórios e permissões)
+- ✅ Clona o repositório oficial do OpenClaw
+- ✅ **Executa o instalador oficial** (`docker-setup.sh`)
+- ✅ Fornece instruções claras durante o processo
 
----
+## ⚠️ Importante
 
-## 📋 Requisitos
-
-- **Sistema**: Ubuntu 20.04+ / Debian 11+
-- **RAM**: Mínimo 4GB
-- **Disco**: Mínimo 20GB livres
-- **Acesso**: Root ou sudo
+Este instalador **usa o instalador oficial do OpenClaw** sem modificações.  
+Você precisará **interagir manualmente** com o wizard para configurar OAuth.
 
 ---
 
@@ -39,22 +36,35 @@ bash install.sh
 
 ---
 
+## 📋 Durante a Instalação
+
+O wizard oficial do OpenClaw vai pedir:
+
+1. **Confirmação de Segurança**
+   - Responda: `Yes` (Y)
+
+2. **Modo de Configuração**
+   - Escolha: `QuickStart` (use setas ↑↓ + ENTER)
+
+3. **AI Providers**
+   - Selecione: `OpenAI` (use ESPAÇO para marcar, ENTER para continuar)
+
+4. **OAuth**
+   - Autorize no navegador
+   - Cole a URL de callback no terminal
+
+---
+
 ## 🔑 Após a Instalação
 
-### Suas credenciais estão salvas em:
-
-```bash
-cat ~/.openclaw-credentials.txt
-```
-
-### Verificar status dos containers:
+### Verificar status:
 
 ```bash
 cd ~/.openclaw/openclaw
 docker compose ps
 ```
 
-### Ver logs em tempo real:
+### Ver logs:
 
 ```bash
 cd ~/.openclaw/openclaw
@@ -75,20 +85,12 @@ cd ~/.openclaw/openclaw
 docker compose up -d
 ```
 
----
+### Acessar Dashboard:
 
-## ⚠️ Importante durante a instalação
-
-Quando o wizard do OpenClaw pedir a **URL de callback OAuth**:
-
-1. **Use o IP público da sua VPS**
-   - Exemplo: `http://203.0.113.45:1455`
-   - **NÃO use** `localhost` ou `127.0.0.1`
-
-2. **Após autorizar na OpenAI:**
-   - Copie a URL completa que aparece no navegador
-   - Cole no terminal quando solicitado
-   - A URL começa com `http://localhost:1455/auth/callback?code=...`
+```bash
+cd ~/.openclaw/openclaw
+docker compose run --rm openclaw-cli openclaw dashboard
+```
 
 ---
 
@@ -99,23 +101,46 @@ cd ~/.openclaw/openclaw
 docker compose down -v
 cd ~
 rm -rf ~/.openclaw
-rm -f ~/.openclaw-credentials.txt
 ```
 
 ---
 
-## 📚 Estrutura de Arquivos
+## 📚 Documentação
 
-```
-~/.openclaw/
-├── openclaw/              # Repositório oficial clonado
-│   ├── docker-compose.yml # Configuração Docker
-│   └── ...
-├── workspace/             # Área de trabalho dos agentes
-├── agents/                # Agentes instalados
-└── .env                   # Credenciais (NÃO COMPARTILHAR!)
+### 🏗️ Como Funciona Este Instalador?
+📘 **Leia**: [COMO_FUNCIONA.md](COMO_FUNCIONA.md) - Explica a arquitetura completa
 
-~/.openclaw-credentials.txt # Suas credenciais de acesso
+**TL;DR**: Este instalador:
+1. Prepara o ambiente (Docker, diretórios, permissões)
+2. Clona o repositório oficial do OpenClaw
+3. Executa o `docker-setup.sh` oficial
+4. **Não modifica nada** do código oficial!
+
+### OpenClaw Oficial
+- [OpenClaw GitHub](https://github.com/OpenClaw/openclaw)
+- [Documentação OpenClaw](https://docs.openclaw.ai)
+- [Instalação Docker Oficial](https://docs.openclaw.ai/install/docker)
+
+---
+
+## 🔒 Segurança
+
+### Implementado pelo OpenClaw Oficial:
+- ✅ Token gateway gerado automaticamente
+- ✅ Arquivo de configuração com permissões corretas
+- ✅ Containers isolados
+- ✅ Autenticação por token
+
+### Guia Completo:
+📖 Veja [SECURITY.md](SECURITY.md) para guia completo de segurança
+
+### Recomendações:
+
+**⚠️ Configure o Firewall:**
+```bash
+sudo apt install ufw -y
+sudo ufw allow 22/tcp
+sudo ufw --force enable
 ```
 
 ---
@@ -136,76 +161,23 @@ cd ~/.openclaw/openclaw
 docker compose logs
 ```
 
-### Erro EACCES ao criar agentes
+### Reinstalar
 
 ```bash
-sudo chown -R 1000:1000 ~/.openclaw
-sudo chmod -R 755 ~/.openclaw
+curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/install.sh | bash
 ```
 
 ---
 
-## 🔒 Segurança
+## 💡 Por Que Usar Este Instalador?
 
-### Implementado Automaticamente:
-- ✅ Token gateway gerado automaticamente com 32 bytes (256 bits)
-- ✅ Arquivo `.env` com permissões `600` (somente leitura do dono)
-- ✅ Credenciais salvas em arquivo separado
-- ✅ Containers isolados (sem acesso root ao host)
-- ✅ `.env` no `.gitignore` (nunca será commitado)
+### Vantagens
 
-### Recomendações Importantes:
-
-**⚠️ Configure o Firewall:**
-```bash
-sudo apt install ufw -y
-sudo ufw allow 22/tcp          # SSH
-sudo ufw allow 1455/tcp        # OpenClaw (se usar externamente)
-sudo ufw --force enable
-```
-
-**⚠️ Proteja o SSH:**
-```bash
-# Desabilite login root em /etc/ssh/sshd_config
-PermitRootLogin no
-PasswordAuthentication no
-```
-
-**⚠️ Instale Fail2Ban:**
-```bash
-sudo apt install fail2ban -y
-sudo systemctl enable fail2ban
-```
-
-### Guia Completo:
-📖 Veja [SECURITY.md](SECURITY.md) para guia completo de segurança
-
-### Regras de Ouro:
-- ❌ **NUNCA** compartilhe seu `OPENCLAW_GATEWAY_TOKEN`
-- ❌ **NUNCA** exponha porta 1455 sem firewall
-- ❌ **NUNCA** use senha fraca no SSH
-- ✅ **SEMPRE** faça backup das credenciais
-- ✅ **SEMPRE** mantenha o sistema atualizado
-
----
-
-## 📖 Documentação
-
-### 🏗️ Como Funciona Este Instalador?
-📘 **Leia**: [COMO_FUNCIONA.md](COMO_FUNCIONA.md) - Explica a arquitetura completa e como interagimos com o OpenClaw oficial.
-
-**TL;DR**: Este instalador apenas **prepara o ambiente** (Docker, diretórios, permissões, token) e depois executa o instalador oficial do OpenClaw (`docker-setup.sh`). Não modificamos nada do código oficial!
-
-### OpenClaw Oficial
-- [OpenClaw GitHub](https://github.com/OpenClaw/openclaw)
-- [Documentação OpenClaw](https://docs.openclaw.ai)
-
----
-
-## 🐛 Suporte
-
-- **Issues**: [GitHub Issues](https://github.com/wolfxweb/setup-openclaw/issues)
-- **OpenClaw**: [Documentação Oficial](https://docs.openclaw.com)
+✅ **Simplicidade**: Prepara tudo automaticamente  
+✅ **Oficial**: Usa o instalador oficial do OpenClaw  
+✅ **Sem Modificações**: Não altera o código original  
+✅ **Instruções Claras**: Guia passo a passo  
+✅ **Limpeza Automática**: Remove instalações anteriores  
 
 ---
 
@@ -217,9 +189,9 @@ MIT License - Veja [LICENSE](LICENSE) para detalhes.
 
 ## ⭐ Sobre
 
-Este é um instalador não-oficial simplificado para OpenClaw.  
+Este é um wrapper não-oficial que facilita o uso do instalador oficial do OpenClaw.  
 OpenClaw é desenvolvido por [OpenClaw Team](https://github.com/OpenClaw/openclaw).
 
-**Versão**: 2.0.0 - Instalador Simplificado  
+**Versão**: 4.0.0 - Wrapper do Instalador Oficial  
 **Autor**: wolfxweb  
 **Repositório**: https://github.com/wolfxweb/setup-openclaw
