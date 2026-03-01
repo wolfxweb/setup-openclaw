@@ -178,38 +178,93 @@ chown -R 1000:1000 "$HOME/.openclaw"
 chmod -R 755 "$HOME/.openclaw"
 
 echo ""
-echo -e "${GREEN}✓ Iniciando instalação do OpenClaw${NC}"
-echo ""
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}📋 INSTRUÇÕES IMPORTANTES:${NC}"
-echo ""
-echo -e "${GREEN}1. Confirmação de Segurança:${NC}"
-echo "   → Responda: ${GREEN}Yes${NC} (Y)"
-echo ""
-echo -e "${GREEN}2. Modo de Configuração:${NC}"
-echo "   → Escolha: ${GREEN}QuickStart${NC} (use setas ↑↓ + ENTER)"
-echo ""
-echo -e "${GREEN}3. Callback OAuth:${NC}"
-echo "   → Digite o IP público desta VPS"
-echo "   → Exemplo: ${BLUE}http://203.0.113.45:1455${NC}"
-echo ""
-echo -e "${GREEN}4. Após autorizar OpenAI:${NC}"
-echo "   → Copie a URL do navegador"
-echo "   → Cole no terminal"
-echo ""
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✓ Iniciando instalação automática do OpenClaw${NC}"
 echo ""
 sleep 2
 
-# Executar o setup oficial do OpenClaw
-# Nota: O wizard requer interação manual com setas do teclado
-bash docker-setup.sh || {
+# Verificar se expect está instalado
+if ! command -v expect &> /dev/null; then
+    echo -e "${YELLOW}⚠ Instalando expect...${NC}"
+    apt-get update -qq && apt-get install -y expect -qq > /dev/null 2>&1
+    echo -e "${GREEN}✓ Expect instalado${NC}"
+fi
+
+# Criar script expect para automatizar o wizard
+cat > /tmp/openclaw-install.exp << 'EXPECTEOF'
+#!/usr/bin/expect -f
+
+set timeout 300
+set gateway_token [lindex $argv 0]
+
+spawn bash docker-setup.sh
+
+# Aguardar aviso de segurança
+expect {
+    "Continue?" {
+        send "y\r"
+        exp_continue
+    }
+    "Onboarding mode" {
+        send "\r"
+        exp_continue
+    }
+    "Which AI providers" {
+        send " "
+        send "\r"
+        exp_continue
+    }
+    "OpenAI OAuth callback URL" {
+        send "http://localhost:1455\r"
+        exp_continue
+    }
+    "paste the full callback URL" {
+        send_user "\n\n"
+        send_user "==========================================================\n"
+        send_user "⚠️  ATENÇÃO: Configure OAuth manualmente\n"
+        send_user "==========================================================\n"
+        send_user "1. Abra o navegador no link que apareceu acima\n"
+        send_user "2. Autorize o OpenClaw na OpenAI\n"
+        send_user "3. Copie a URL completa que aparece no navegador\n"
+        send_user "4. Cole aqui no terminal\n"
+        send_user "==========================================================\n\n"
+        interact
+        return
+    }
+    eof {
+        exit 0
+    }
+    timeout {
+        send_user "\n\nTimeout - instalação manual necessária\n"
+        exit 1
+    }
+}
+
+interact
+EXPECTEOF
+
+chmod +x /tmp/openclaw-install.exp
+
+# Executar instalação automatizada
+GATEWAY_TOKEN=$(cat "$HOME/.openclaw/.env" | grep OPENCLAW_GATEWAY_TOKEN | cut -d'=' -f2)
+
+echo -e "${BLUE}Executando instalação automatizada...${NC}"
+/tmp/openclaw-install.exp "$GATEWAY_TOKEN" || {
     echo ""
-    echo -e "${RED}✗ Erro durante a instalação${NC}"
-    echo -e "${YELLOW}Tente executar manualmente:${NC}"
-    echo -e "${BLUE}cd ~/.openclaw/openclaw && bash docker-setup.sh${NC}"
+    echo -e "${RED}✗ Erro durante a instalação automática${NC}"
+    echo ""
+    echo -e "${YELLOW}Alternativa - Instalação Manual:${NC}"
+    echo -e "${BLUE}1. cd ~/.openclaw/openclaw${NC}"
+    echo -e "${BLUE}2. bash docker-setup.sh${NC}"
+    echo -e "${BLUE}3. Responda 'Yes' à confirmação de segurança${NC}"
+    echo -e "${BLUE}4. Escolha 'QuickStart' (use setas + ENTER)${NC}"
+    echo -e "${BLUE}5. Configure OAuth com OpenAI${NC}"
+    echo ""
+    rm -f /tmp/openclaw-install.exp
     exit 1
 }
+
+# Limpar arquivo temporário
+rm -f /tmp/openclaw-install.exp
 
 #======================================
 # Finalização
