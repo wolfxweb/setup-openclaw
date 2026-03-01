@@ -189,10 +189,16 @@ sudo systemctl enable fail2ban
 
 ---
 
-## 📖 Documentação Oficial
+## 📖 Documentação
 
+### 🏗️ Como Funciona Este Instalador?
+📘 **Leia**: [COMO_FUNCIONA.md](COMO_FUNCIONA.md) - Explica a arquitetura completa e como interagimos com o OpenClaw oficial.
+
+**TL;DR**: Este instalador apenas **prepara o ambiente** (Docker, diretórios, permissões, token) e depois executa o instalador oficial do OpenClaw (`docker-setup.sh`). Não modificamos nada do código oficial!
+
+### OpenClaw Oficial
 - [OpenClaw GitHub](https://github.com/OpenClaw/openclaw)
-- [Documentação OpenClaw](https://docs.openclaw.com)
+- [Documentação OpenClaw](https://docs.openclaw.ai)
 
 ---
 
