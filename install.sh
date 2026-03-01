@@ -87,7 +87,7 @@ echo -e "${GREEN}✓ OpenClaw baixado${NC}"
 #======================================
 # 5. Build da imagem Docker (antes do wizard)
 #======================================
-echo -e "${YELLOW}[5/6]${NC} Compilando OpenClaw (isso pode demorar 3-5 minutos)..."
+echo -e "${YELLOW}[5/7]${NC} Compilando OpenClaw (isso pode demorar 3-5 minutos)..."
 
 # Fazer build da imagem antes do wizard
 docker build -t openclaw:local -f Dockerfile . || {
@@ -100,7 +100,7 @@ echo -e "${GREEN}✓ OpenClaw compilado${NC}"
 #======================================
 # 6. Configurar e iniciar (wizard interativo)
 #======================================
-echo -e "${YELLOW}[6/6]${NC} Configurando OpenClaw..."
+echo -e "${YELLOW}[6/7]${NC} Configurando OpenClaw..."
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}📋 INSTRUÇÕES DO WIZARD:${NC}"
@@ -136,6 +136,95 @@ fi
 # Como já fizemos o build, o docker-setup.sh vai pular essa etapa
 export OPENCLAW_IMAGE=openclaw:local
 bash docker-setup.sh
+
+#======================================
+# 7. Detectar IP e configurar acesso remoto
+#======================================
+echo ""
+echo -e "${YELLOW}[7/7]${NC} Configurando acesso remoto..."
+
+PUBLIC_IP=$(curl -s -4 https://ifconfig.me 2>/dev/null || curl -s -4 https://api.ipify.org 2>/dev/null || echo "")
+
+if [ -n "$PUBLIC_IP" ]; then
+    echo -e "${GREEN}✓ IP público detectado: $PUBLIC_IP${NC}"
+    
+    # Verificar se openclaw.json existe
+    if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+        # Criar backup
+        cp "$HOME/.openclaw/openclaw.json" "$HOME/.openclaw/openclaw.json.backup"
+        
+        # Adicionar allowedOrigins com o IP público
+        python3 << PYTHONEOF
+import json
+import sys
+
+try:
+    with open('$HOME/.openclaw/openclaw.json', 'r') as f:
+        config = json.load(f)
+    
+    # Garantir que a estrutura existe
+    if 'gateway' not in config:
+        config['gateway'] = {}
+    if 'controlUi' not in config['gateway']:
+        config['gateway']['controlUi'] = {}
+    if 'allowedOrigins' not in config['gateway']['controlUi']:
+        config['gateway']['controlUi']['allowedOrigins'] = []
+    
+    # Adicionar origens permitidas
+    origins = config['gateway']['controlUi']['allowedOrigins']
+    new_origins = [
+        "http://$PUBLIC_IP:18789",
+        "https://$PUBLIC_IP:18789",
+        "http://127.0.0.1:18789"
+    ]
+    
+    for origin in new_origins:
+        if origin not in origins:
+            origins.append(origin)
+    
+    # Mudar bind de loopback para all (para aceitar conexões externas)
+    config['gateway']['bind'] = 'all'
+    
+    with open('$HOME/.openclaw/openclaw.json', 'w') as f:
+        json.dump(config, f, indent=2)
+    
+    print("✓ Configuração atualizada")
+    sys.exit(0)
+except Exception as e:
+    print(f"✗ Erro: {e}")
+    sys.exit(1)
+PYTHONEOF
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ Acesso remoto configurado${NC}"
+            
+            # Reiniciar gateway para aplicar mudanças
+            echo -e "${YELLOW}Reiniciando gateway...${NC}"
+            cd "$HOME/.openclaw/openclaw"
+            docker compose restart openclaw-gateway
+            sleep 3
+            echo -e "${GREEN}✓ Gateway reiniciado${NC}"
+        else
+            echo -e "${YELLOW}⚠ Não foi possível configurar automaticamente${NC}"
+            echo -e "${YELLOW}Configure manualmente em ~/.openclaw/openclaw.json:${NC}"
+            echo ""
+            echo "  \"gateway\": {"
+            echo "    \"bind\": \"all\","
+            echo "    \"controlUi\": {"
+            echo "      \"allowedOrigins\": ["
+            echo "        \"http://$PUBLIC_IP:18789\","
+            echo "        \"http://127.0.0.1:18789\""
+            echo "      ]"
+            echo "    }"
+            echo "  }"
+        fi
+    else
+        echo -e "${YELLOW}⚠ openclaw.json não encontrado${NC}"
+        echo "Execute o wizard primeiro com: cd ~/.openclaw/openclaw && bash docker-setup.sh"
+    fi
+else
+    echo -e "${YELLOW}⚠ Não foi possível detectar o IP público${NC}"
+fi
 
 #======================================
 # Finalização
