@@ -1,5 +1,52 @@
 # Troubleshooting - SetupOpenClaw
 
+## ❌ EACCES: permission denied (Docker)
+
+### Problema
+```
+Error: EACCES: permission denied, mkdir '/home/node/.openclaw/agents/main/agent'
+```
+
+### Causa
+O container Docker roda como usuário `node` (uid 1000), mas os diretórios montados pertencem a `root`.
+
+### Solução
+
+```bash
+# Corrigir permissões do diretório OpenClaw
+sudo chown -R 1000:1000 ~/.openclaw
+sudo chmod -R 755 ~/.openclaw
+
+# Reiniciar container
+cd /opt/openclaw
+docker compose restart openclaw-gateway
+
+# Verificar logs
+docker compose logs openclaw-gateway | tail -20
+```
+
+### Verificar se corrigiu
+
+```bash
+# Ver proprietário dos diretórios
+ls -la ~/.openclaw
+# Deve mostrar: drwxr-xr-x ... 1000 1000 ...
+
+# Testar criação de arquivo
+sudo -u "#1000" touch ~/.openclaw/test.txt
+# Se não der erro, permissões estão corretas
+rm ~/.openclaw/test.txt
+```
+
+### Prevenção
+O instalador v1.2.0+ corrige automaticamente as permissões. Se instalou manualmente, rode:
+
+```bash
+sudo chown -R 1000:1000 ~/.openclaw
+```
+
+---
+
 ## ❌ OAuth Callback Error (localhost:1455)
 
 ### Problema

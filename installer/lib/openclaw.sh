@@ -135,6 +135,20 @@ install_openclaw() {
     
     log_info "Generating secure credentials..."
     
+    # Create OpenClaw directories with correct permissions
+    log_info "Creating OpenClaw directories..."
+    mkdir -p "$HOME/.openclaw"
+    mkdir -p "$HOME/.openclaw/workspace"
+    mkdir -p "$HOME/.openclaw/agents"
+    
+    # Fix permissions for Docker (node user = uid 1000)
+    log_info "Setting permissions for Docker..."
+    chown -R 1000:1000 "$HOME/.openclaw"
+    chmod -R 755 "$HOME/.openclaw"
+    
+    log_success "Directories created with correct permissions"
+    echo ""
+    
     # Check if .env already exists
     if [ -f "$OPENCLAW_DIR/.env" ]; then
         log_warn ".env file already exists"
@@ -165,6 +179,11 @@ install_openclaw() {
     fi
     
     sleep 2
+    
+    # Fix permissions again after OpenClaw setup (in case it created new dirs)
+    log_info "Ensuring correct permissions..."
+    chown -R 1000:1000 "$HOME/.openclaw" 2>/dev/null || true
+    
     validate_openclaw
     
     # Post-installation configuration
