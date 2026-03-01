@@ -1,13 +1,13 @@
 #!/bin/bash
 # proxy.sh - Traefik proxy setup
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ui.sh"
-source "$SCRIPT_DIR/dns.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/ui.sh"
+source "$LIB_DIR/dns.sh"
 
 OPENCLAW_DIR="/opt/openclaw"
 PROXY_FILE="$OPENCLAW_DIR/docker-compose.proxy.yml"
-TEMPLATE_FILE="$SCRIPT_DIR/../templates/docker-compose.proxy.yml.tpl"
+TEMPLATE_FILE="$LIB_DIR/../templates/docker-compose.proxy.yml.tpl"
 ENV_FILE="$OPENCLAW_DIR/.setupopenclaw.env"
 
 setup_proxy() {

@@ -1,9 +1,9 @@
 #!/bin/bash
 # openclaw.sh - OpenClaw installation
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ui.sh"
-source "$SCRIPT_DIR/docker.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/ui.sh"
+source "$LIB_DIR/docker.sh"
 
 OPENCLAW_DIR="/opt/openclaw"
 OPENCLAW_REPO="https://github.com/openclaw/openclaw.git"

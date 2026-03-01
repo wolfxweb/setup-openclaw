@@ -1,8 +1,8 @@
 #!/bin/bash
 # system.sh - System detection and dependency management
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ui.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/ui.sh"
 
 detect_os() {
     if [ ! -f /etc/os-release ]; then

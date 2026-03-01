@@ -1,8 +1,8 @@
 #!/bin/bash
 # firewall.sh - Enhanced UFW configuration with security hardening
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ui.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/ui.sh"
 
 setup_ufw() {
     print_section "Configuring Firewall (UFW) - Enhanced Security"

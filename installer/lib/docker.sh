@@ -1,8 +1,8 @@
 #!/bin/bash
 # docker.sh - Docker installation
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/ui.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/ui.sh"
 
 is_docker_installed() {
     command -v docker &> /dev/null && docker compose version &> /dev/null

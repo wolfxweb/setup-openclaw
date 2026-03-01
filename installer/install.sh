@@ -4,15 +4,15 @@
 
 set -e
 
-# Detect script directory
+# If running via curl pipe, download the full installer first
 if [ -n "$BASH_SOURCE" ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
 else
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    SCRIPT_PATH="$0"
 fi
 
-# If running via curl pipe, download the full installer
-if [ "$SCRIPT_DIR" = "/dev/fd" ] || [ ! -f "$SCRIPT_DIR/lib/ui.sh" ]; then
+# Check if we're running from stdin (curl | bash)
+if [[ "$SCRIPT_PATH" == "/dev/fd/"* ]] || [[ "$SCRIPT_PATH" == "/proc/self/fd/"* ]]; then
     echo "=================================="
     echo "SetupOpenClaw - Installation"
     echo "=================================="
@@ -58,11 +58,16 @@ if [ "$SCRIPT_DIR" = "/dev/fd" ] || [ ! -f "$SCRIPT_DIR/lib/ui.sh" ]; then
     # Cleanup temp
     rm -rf "$TEMP_DIR"
     
-    # Re-execute from the correct location
+    # Re-execute from the correct location with a clean environment
     echo "✓ Launching installer..."
     echo ""
-    exec /root/setup-openclaw/installer/install.sh "$@"
+    cd /root/setup-openclaw/installer
+    exec bash /root/setup-openclaw/installer/install.sh "$@"
+    exit 0
 fi
+
+# Now we know we're running from a real file, get the directory
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
 # Source all libraries (now we're sure they exist)
 source "$SCRIPT_DIR/lib/ui.sh"
