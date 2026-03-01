@@ -55,8 +55,17 @@ fi
 #======================================
 echo -e "${YELLOW}[2/8]${NC} Limpando instalação anterior..."
 
+# Parar e remover TODOS os containers OpenClaw
+if docker ps -a | grep -q openclaw; then
+    echo "Parando containers OpenClaw..."
+    docker ps -a | grep openclaw | awk '{print $1}' | xargs -r docker stop 2>/dev/null || true
+    echo "Removendo containers OpenClaw..."
+    docker ps -a | grep openclaw | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+fi
+
+# Limpar diretórios
 if [ -d "$HOME/.openclaw" ]; then
-    echo "Removendo containers anteriores..."
+    echo "Removendo diretórios anteriores..."
     cd "$HOME/.openclaw/openclaw" 2>/dev/null && docker compose down -v 2>/dev/null || true
     cd "$HOME"
     rm -rf "$HOME/.openclaw"
@@ -201,11 +210,14 @@ OPENCLAW_GATEWAY_BIND=lan
 OPENCLAW_IMAGE=openclaw:local
 ENVEOF
 
-# Parar containers existentes
-echo -e "${YELLOW}Limpando containers anteriores...${NC}"
-docker compose down -v 2>/dev/null || true
-docker stop openclaw-gateway 2>/dev/null || true
-docker rm openclaw-gateway 2>/dev/null || true
+# Garantir que porta está livre
+echo -e "${YELLOW}Verificando porta 18789...${NC}"
+if lsof -Pi :18789 -sTCP:LISTEN -t >/dev/null 2>&1 || docker ps | grep -q "18789->18789"; then
+    echo -e "${YELLOW}⚠ Porta 18789 em uso, liberando...${NC}"
+    # Parar qualquer container usando a porta
+    docker ps -q | xargs -r docker inspect --format='{{.Name}} {{range $p, $conf := .NetworkSettings.Ports}}{{if eq $p "18789/tcp"}}{{$.Name}}{{end}}{{end}}' | grep -v '^$' | awk '{print $1}' | xargs -r docker stop 2>/dev/null || true
+    sleep 2
+fi
 
 # Criar docker-compose simplificado
 cat > docker-compose.simple.yml << COMPOSEEOF
@@ -230,7 +242,12 @@ services:
 COMPOSEEOF
 
 echo -e "${BLUE}Iniciando gateway...${NC}"
-docker compose -f docker-compose.simple.yml up -d
+docker compose -f docker-compose.simple.yml up -d || {
+    echo -e "${RED}✗ Erro ao iniciar gateway${NC}"
+    echo -e "${YELLOW}Verificando logs...${NC}"
+    docker logs openclaw-gateway 2>&1 | tail -20
+    exit 1
+}
 
 echo -e "${GREEN}✓ Gateway iniciado${NC}"
 
