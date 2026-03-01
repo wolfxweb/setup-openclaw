@@ -80,6 +80,28 @@ source "$SCRIPT_DIR/lib/firewall.sh"
 # Initialize
 init_ui
 
+# Check X11 availability
+check_x11_display() {
+    if [ -n "$DISPLAY" ] && command -v xdpyinfo &> /dev/null; then
+        if xdpyinfo &> /dev/null; then
+            echo ""
+            log_success "X11 Display detected!"
+            echo -e "${COLOR_INFO}💡 Tip: You're using graphical interface via X11 forwarding${COLOR_RESET}"
+            echo -e "${COLOR_INFO}   Menus will appear in graphical windows${COLOR_RESET}"
+            echo ""
+            sleep 2
+        fi
+    elif [ -n "$DISPLAY" ]; then
+        echo ""
+        log_info "X11 detected but xdpyinfo not available"
+        echo -e "${COLOR_INFO}💡 Want graphical menus? See: X11_GUI_INSTALL.md${COLOR_RESET}"
+        echo ""
+        sleep 1
+    fi
+}
+
+check_x11_display
+
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
     log_error "This script must be run as root"

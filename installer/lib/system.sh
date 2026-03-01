@@ -96,6 +96,30 @@ is_port_in_use() {
 cleanup_docker() {
     print_section "Cleaning Docker Resources"
     
+    echo ""
+    echo -e "${COLOR_ERROR}⚠️  WARNING: IRREVERSIBLE OPERATION ⚠️${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_WARN}This will remove:${COLOR_RESET}"
+    echo "  • ALL stopped containers (not just OpenClaw)"
+    echo "  • ALL unused images (not just OpenClaw)"
+    echo "  • ALL unused volumes (not just OpenClaw)"
+    echo "  • ALL build cache"
+    echo "  • ALL unused networks"
+    echo ""
+    echo -e "${COLOR_ERROR}⚠️  If you have OTHER Docker projects on this server,${COLOR_RESET}"
+    echo -e "${COLOR_ERROR}   they may be affected!${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_INFO}What will be kept:${COLOR_RESET}"
+    echo "  ✓ Running containers and their images"
+    echo "  ✓ Volumes currently in use"
+    echo ""
+    
+    if ! prompt_yes_no "Do you understand and want to proceed?" "n"; then
+        log_info "Cleanup cancelled by user"
+        return 1
+    fi
+    
+    echo ""
     log_info "Checking Docker usage..."
     
     # Show current disk usage
