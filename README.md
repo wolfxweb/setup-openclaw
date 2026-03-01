@@ -1,56 +1,27 @@
 # SetupOpenClaw
 
-Sistema profissional de instalação automatizada do **OpenClaw** via Docker, com painel web administrativo e **segurança aprimorada**.
+Sistema profissional de instalação automatizada do **OpenClaw** via Docker com segurança aprimorada.
 
 [![Security](https://img.shields.io/badge/security-8.5%2F10-green.svg)](SECURITY.md)
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/wolfxweb/setup-openclaw)
-[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
 
-## 🎯 Características
+## 🆕 v1.1.0 - Security Hardening
 
-- ✅ **Instalação 100% Docker** - Segue exatamente o fluxo oficial do repositório OpenClaw
-- ✅ **Wizard Interativo** - Não automatiza respostas, mantém a experiência original
-- ✅ **Proxy Traefik + SSL** - HTTPS automático com Let's Encrypt
-- ✅ **Painel Web** - Interface FastAPI + HTMX para gerenciar remotamente
-- ✅ **🔒 Segurança Aprimorada v1.1.0** - Rate limiting, validação de senha forte, logs de segurança
-- ✅ **Firewall UFW** - Configuração restritiva com bloqueio inteligente
-- ✅ **Idempotente** - Pode ser executado múltiplas vezes sem problemas
+- 🛡️ Rate limiting (5 tentativas login)
+- 🔑 Senhas fortes obrigatórias (12+ chars)
+- 📊 Logs de segurança completos
+- 🚪 Porta 8080 bloqueada por padrão
+- 🔒 Proteção anti-hijacking
+- 🛡️ Firewall hardening
+- 🔐 Fail2Ban support
 
-## 🆕 Novidades v1.1.0 - Security Hardening
+**Score:** 6.8/10 → **8.5/10** ✅
 
-### Melhorias de Segurança
-- 🛡️ **Rate Limiting**: 5 tentativas de login, 10 ações/minuto
-- 🔑 **Senhas Fortes**: Mínimo 12 caracteres com complexidade obrigatória
-- 📊 **Logs de Segurança**: `/var/log/setup-openclaw/security.log`
-- 🚪 **Porta 8080 Bloqueada**: Acesso apenas via SSH tunnel (recomendado)
-- 🔒 **Proteção de Sessão**: Detecção de IP hijacking
-- 🛡️ **Firewall Hardening**: Default deny + SSH rate limiting
-- 🔐 **Fail2Ban Support**: Proteção contra brute force
-
-**Score de Segurança:** 6.8/10 → **8.5/10** ✅
-
-📖 **[Leia o Guia de Segurança Completo](SECURITY.md)**
-
-## 📋 Requisitos
-
-- **OS**: Ubuntu 22.04/24.04 ou Debian 12
-- **RAM**: Mínimo 2GB (recomendado 4GB+)
-- **Disco**: Mínimo 20GB livre
-- **Acesso**: Root (sudo)
-- **Internet**: Conexão estável
+📖 [**Guia Completo de Segurança**](SECURITY.md)
 
 ## 🚀 Instalação Rápida
 
-### Opção 1: Script Direto (curl)
-
-```bash
-# Clone do GitHub
-git clone https://github.com/wolfxweb/setup-openclaw.git /root/setup-openclaw
-cd /root/setup-openclaw/installer
-sudo ./install.sh
-```
-
-### Opção 2: Via Git
+### Método 1: Clone Manual (Recomendado)
 
 ```bash
 git clone https://github.com/wolfxweb/setup-openclaw.git /root/setup-openclaw
@@ -58,169 +29,148 @@ cd /root/setup-openclaw/installer
 sudo ./install.sh
 ```
 
-## 📦 Instalação do Painel Web
+### Método 2: Comando Único
 
-O painel web permite gerenciar a instalação remotamente via navegador.
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/installer/install.sh)
+```
+
+## 📦 Painel Web
 
 ```bash
 cd /root/setup-openclaw/panel
 
-# Configure credenciais FORTES (v1.1.0 requer senha complexa)
-export PANEL_USER=admin
-export PANEL_PASSWORD=$(openssl rand -base64 24)  # Gera senha forte
-export SECRET_KEY=$(openssl rand -base64 32)
+# Configure senha forte (obrigatório v1.1.0)
+export PANEL_PASSWORD=$(openssl rand -base64 24)
+echo "Sua senha: $PANEL_PASSWORD"  # Guarde esta senha!
 
-# Inicie o painel
 docker compose up -d
 ```
 
-**🔒 Acesso Seguro (RECOMENDADO):**
-
+**🔒 Acesso Seguro (SSH Tunnel):**
 ```bash
-# No seu computador local, crie SSH tunnel:
+# No seu computador local:
 ssh -L 8080:localhost:8080 root@SEU_SERVIDOR_IP
 
-# Depois acesse: http://localhost:8080
+# Acesse: http://localhost:8080
+# Login: admin
+# Senha: a que você gerou acima
 ```
 
-**Credenciais padrão**: `admin` / `changeme` (⚠️ Mude imediatamente!)
+## 🎯 Funcionalidades
 
-## 🏗️ Arquitetura
+- ✅ Instalação 100% Docker (fluxo oficial OpenClaw)
+- ✅ Wizard interativo preservado
+- ✅ Proxy Traefik + SSL automático
+- ✅ Painel FastAPI + HTMX
+- ✅ Rate limiting automático
+- ✅ Validação senha forte
+- ✅ Logs de auditoria
+- ✅ Firewall UFW hardening
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         HOST VPS (Ubuntu/Debian)                │
-│                                                                 │
-│  ┌─────────────┐         ┌──────────────┐                     │
-│  │   Usuário   │ ◄────── │  Painel Web  │                     │
-│  │  (Browser)  │         │  (Port 8080) │                     │
-│  └─────────────┘         └───────┬──────┘                     │
-│                                  │                              │
-│                                  ▼                              │
-│                          ┌──────────────┐                      │
-│                          │  install.sh  │                      │
-│                          └───────┬──────┘                      │
-│                                  │                              │
-│                                  ▼                              │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │                    DOCKER ENGINE                         │ │
-│  │                                                          │ │
-│  │  ┌────────────────────────────────────────────────────┐ │ │
-│  │  │         CONTAINERS DOCKER                          │ │ │
-│  │  │  ┌──────────────┐      ┌────────────────────┐    │ │ │
-│  │  │  │   Traefik    │      │  OpenClaw Gateway  │    │ │ │
-│  │  │  │   (Proxy)    │◄────►│   (Container)      │    │ │ │
-│  │  │  │  Port 80/443 │      │   Internal :18789  │    │ │ │
-│  │  │  └──────────────┘      └────────────────────┘    │ │ │
-│  │  └────────────────────────────────────────────────────┘ │ │
-│  └──────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-```
+## 📚 Documentação
 
-**📖 [Diagrama Completo da Arquitetura](ARCHITECTURE.md)**
-
-## 📚 Funcionalidades do Instalador
-
-### Menu Interativo
-
-1. **Instalar/Reinstalar OpenClaw**
-   - Verifica requisitos do sistema
-   - Instala dependências base
-   - Instala Docker oficial
-   - Clona repositório OpenClaw
-   - Executa `./docker-setup.sh` (wizard interativo)
-
-2. **Atualizar OpenClaw**
-   - Git pull da última versão
-   - Rebuild da imagem Docker
-   - Restart dos containers
-
-3. **Configurar Proxy + SSL**
-   - Solicita domínio
-   - Valida DNS (A/AAAA record)
-   - Gera `docker-compose.proxy.yml` com Traefik
-   - Certificado SSL automático (Let's Encrypt)
-   - Expõe apenas portas 80/443
-
-4. **Configurar Autenticação Web**
-   - Solicita usuário/senha
-   - Valida força da senha (v1.1.0)
-   - Gera hash BCrypt
-   - Configura BasicAuth no Traefik
-
-5. **Configurar Firewall (UFW)** 🆕 **Enhanced**
-   - Libera porta SSH (personalizável)
-   - Libera portas 80/443 (se proxy ativo)
-   - **Bloqueia porta 8080 externamente (padrão)**
-   - SSH rate limiting
-   - Fail2Ban integration
-   - SSH hardening opcional
-
-6. **Status & Logs**
-   - Status dos containers
-   - Test de conectividade (curl)
-   - Últimos 50 logs do gateway
-   - **Logs de segurança** 🆕
-
-7. **Desinstalar**
-   - Confirmação com "EXCLUIR"
-   - Para e remove containers
-   - Opção de remover diretório
-   - Opção de remover Docker
-
-### Modo Não-Interativo (para Painel)
-
-```bash
-sudo ./install.sh --action install
-sudo ./install.sh --action update
-sudo ./install.sh --action proxy
-sudo ./install.sh --action webauth
-sudo ./install.sh --action ufw
-sudo ./install.sh --action status
-sudo ./install.sh --action uninstall
-```
+- 📖 [SECURITY.md](SECURITY.md) - **Guia de segurança completo** (leitura obrigatória!)
+- 📖 [ARCHITECTURE.md](ARCHITECTURE.md) - Arquitetura do sistema
+- 📖 [QUICKSTART.md](QUICKSTART.md) - Guia rápido
+- 📖 [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Resumo técnico
 
 ## 🔒 Segurança
 
-### ⚠️ IMPORTANTE - Leia Antes de Usar em Produção
+**v1.1.0** implementa proteções profissionais:
+- Rate limiting contra brute force
+- Senhas fortes obrigatórias (min 12 chars)
+- Logs de segurança com auditoria
+- Firewall com default deny
+- SSH hardening automático
+- Session hijacking protection
 
-O SetupOpenClaw v1.1.0 inclui melhorias significativas de segurança, mas requer configuração adequada:
+⚠️ **IMPORTANTE:** Leia [SECURITY.md](SECURITY.md) antes de usar em produção!
 
-**✅ Configuração Mínima Segura:**
+**Acesso ao painel:**
+- ✅ **RECOMENDADO**: Via SSH tunnel (porta 8080 bloqueada externamente)
+- ⚠️ **NÃO RECOMENDADO**: Expor porta 8080 publicamente
+
+## 📊 Logs
+
+- **Instalador**: `/var/log/setup-openclaw/install.log`
+- **Segurança**: `/var/log/setup-openclaw/security.log`
+- **Gateway**: `cd /opt/openclaw && docker compose logs`
+
+## 🔄 Atualizar
 
 ```bash
-# 1. Firewall restritivo
-sudo /root/setup-openclaw/installer/install.sh
-# Escolha opção 5: Configurar Firewall
-# - Bloquear porta 8080 externamente: SIM
-
-# 2. Acesso ao painel via SSH tunnel APENAS
-ssh -L 8080:localhost:8080 root@seu-servidor
-
-# 3. Senha forte (auto-gerada recomendado)
-export PANEL_PASSWORD=$(openssl rand -base64 24)
-
-# 4. Monitorar logs de segurança
-tail -f /var/log/setup-openclaw/security.log
+cd /root/setup-openclaw
+git pull origin main
+cd panel && docker compose down && docker compose build && docker compose up -d
 ```
 
-**🛡️ Proteções Ativas (v1.1.0):**
-- Rate limiting automático (5 tentativas login)
-- Validação de senha forte (min 12 chars)
-- Logs de segurança com auditoria
-- Proteção contra session hijacking
-- Firewall com default deny
+## 🔑 Para Desenvolvedores
 
-**📖 [Guia Completo de Segurança](SECURITY.md)**
+### Clonar o Repositório
 
-### Sudoers (Produção)
-
-Para executar o painel sem root completo:
-
+**SSH (Recomendado):**
 ```bash
-# Criar usuário específico
-useradd -m -s /bin/bash setup-panel
+git clone git@github.com:wolfxweb/setup-openclaw.git
+```
 
-# Configurar sudoers
-cat << 'EOF' > /etc/sudoers.d/setup-openclaw
-setup-panel ALL=(ALL) NOPASSWD: /root/setup-openclaw/installer/install.sh --action *
+**HTTPS:**
+```bash
+git clone https://github.com/wolfxweb/setup-openclaw.git
+```
+
+### Configurar SSH para Git
+
+Se você já tem uma chave SSH no GitHub:
+```bash
+cd /root/setup-openclaw
+git remote set-url origin git@github.com:wolfxweb/setup-openclaw.git
+git pull origin main
+```
+
+Se você precisa criar uma chave SSH:
+```bash
+ssh-keygen -t ed25519 -C "seu@email.com"
+cat ~/.ssh/id_ed25519.pub  # Adicione esta chave no GitHub
+```
+
+**Adicionar chave no GitHub**: https://github.com/settings/keys
+
+## 📞 Suporte
+
+- **Repositório**: https://github.com/wolfxweb/setup-openclaw
+- **OpenClaw Oficial**: https://github.com/openclaw/openclaw
+- **Issues**: https://github.com/wolfxweb/setup-openclaw/issues
+
+## 📝 Changelog
+
+### v1.1.0 (2024-03-01) - Security Hardening
+- 🔒 Rate limiting (5 login attempts, 10 actions/min)
+- 🔑 Senha forte obrigatória (12+ chars, uppercase, lowercase, number, special)
+- 📊 Logs de segurança completos com auditoria
+- 🛡️ Firewall hardening (default deny, SSH rate limit)
+- 🚪 Porta 8080 bloqueada externamente por padrão
+- 🔐 Session hijacking protection
+- 📖 Guia de segurança completo (SECURITY.md)
+
+### v1.0.0 (2024-02-14) - Release Inicial
+- ✅ Instalador Bash modular
+- ✅ Painel web FastAPI + HTMX
+- ✅ Proxy Traefik com SSL automático
+- ✅ Firewall UFW
+- ✅ Documentação completa
+
+## 🙏 Créditos
+
+- **OpenClaw**: https://openclaw.ai
+- **Traefik**: https://traefik.io
+- **FastAPI**: https://fastapi.tiangolo.com
+- **HTMX**: https://htmx.org
+
+---
+
+**SetupOpenClaw v1.1.0** | Instalação profissional com segurança aprimorada
+
+⭐ **Dê uma estrela no GitHub se este projeto foi útil!**
+
+**Desenvolvido por:** [wolfxweb](https://github.com/wolfxweb)
