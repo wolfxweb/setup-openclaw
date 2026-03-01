@@ -196,8 +196,159 @@ curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/instal
 
 ---
 
+---
+
+## ❌ Erro: control ui requires device identity (use HTTPS or localhost secure context)
+
+### Descrição do erro:
+```
+control ui requires device identity (use HTTPS or localhost secure context)
+```
+
+### Causa:
+O OpenClaw Control UI requer contexto seguro (HTTPS ou localhost) para funcionar. Acessar via IP público HTTP não é permitido por questões de segurança.
+
+### ✅ Soluções:
+
+#### **Opção 1: Túnel SSH (Recomendada - Simples e Segura)**
+
+No seu computador local:
+
+```bash
+ssh -L 18789:localhost:18789 root@SEU_IP_SERVIDOR
+```
+
+Depois acesse no navegador:
+```
+http://localhost:18789
+```
+
+**Vantagens:**
+- ✅ Criptografia via SSH
+- ✅ Sem configuração adicional
+- ✅ Porta não exposta publicamente
+
+---
+
+#### **Opção 2: Cloudflare Tunnel (Recomendada - HTTPS Automático)**
+
+**1. Instalar Cloudflared:**
+
+```bash
+curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+```
+
+**2. Autenticar no Cloudflare:**
+
+```bash
+cloudflared tunnel login
+```
+
+Abra o link fornecido no navegador e autorize.
+
+**3. Criar túnel:**
+
+```bash
+cloudflared tunnel create openclaw-gateway
+```
+
+**4. Configurar túnel:**
+
+Crie `/root/.cloudflared/config.yml`:
+
+```yaml
+tunnel: SEU_TUNNEL_ID
+credentials-file: /root/.cloudflared/SEU_TUNNEL_ID.json
+
+ingress:
+  - hostname: seu-dominio.com.br
+    service: http://localhost:18789
+  - service: http_status:404
+```
+
+**5. Criar DNS:**
+
+```bash
+cloudflared tunnel route dns openclaw-gateway seu-dominio.com.br
+```
+
+**6. Atualizar `openclaw.json`:**
+
+Adicione seu domínio em `allowedOrigins`:
+
+```json
+{
+  "gateway": {
+    "controlUi": {
+      "allowedOrigins": [
+        "http://127.0.0.1:18789",
+        "http://localhost:18789",
+        "https://seu-dominio.com.br"
+      ]
+    }
+  }
+}
+```
+
+**7. Instalar como serviço:**
+
+```bash
+cloudflared service install
+systemctl start cloudflared
+systemctl enable cloudflared
+```
+
+**8. Reiniciar gateway:**
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose restart openclaw-gateway
+```
+
+**9. Acessar:**
+
+```
+https://seu-dominio.com.br
+```
+
+**Vantagens:**
+- ✅ HTTPS automático (Let's Encrypt via Cloudflare)
+- ✅ Sem necessidade de abrir portas no firewall
+- ✅ DDoS protection gratuito
+- ✅ CDN global
+- ✅ Zero Trust security
+
+---
+
+#### **Opção 3: Caddy + Domínio próprio**
+
+Se você tem um domínio, pode usar Caddy para HTTPS automático:
+
+```bash
+# Instalar Caddy
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy
+
+# Configurar Caddy
+cat > /etc/caddy/Caddyfile << 'EOF'
+seu-dominio.com.br {
+    reverse_proxy localhost:18789
+}
+EOF
+
+# Reiniciar Caddy
+systemctl restart caddy
+```
+
+---
+
 ## 📚 Mais ajuda
 
 - **Documentação oficial**: https://docs.openclaw.ai
 - **GitHub Issues**: https://github.com/wolfxweb/setup-openclaw/issues
 - **OpenClaw Discord**: https://discord.gg/openclaw
+- **Cloudflare Tunnel**: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/

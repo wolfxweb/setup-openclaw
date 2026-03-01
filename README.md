@@ -57,6 +57,47 @@ O wizard oficial do OpenClaw vai pedir:
 
 ## 🔑 Após a Instalação
 
+### Acessar o Control UI
+
+O OpenClaw Control UI requer contexto seguro (HTTPS ou localhost). Escolha uma opção:
+
+#### **Opção 1: Túnel SSH (Simples)**
+
+No seu computador local:
+
+```bash
+ssh -L 18789:localhost:18789 root@SEU_SERVIDOR
+```
+
+Acesse: `http://localhost:18789`
+
+#### **Opção 2: Cloudflare Tunnel (HTTPS Gratuito)**
+
+📘 **Guia completo:** [CLOUDFLARE_TUNNEL.md](CLOUDFLARE_TUNNEL.md)
+
+```bash
+# Instalar
+curl -L -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+
+# Configurar
+cloudflared tunnel login
+cloudflared tunnel create openclaw-gateway
+# Siga as instruções no guia completo
+```
+
+Acesse: `https://seu-dominio.com.br`
+
+---
+
+### Token de Autenticação
+
+Encontre seu token:
+
+```bash
+cat ~/.openclaw/openclaw.json | grep '"token"'
+```
+
 ### Verificar status:
 
 ```bash
@@ -107,6 +148,14 @@ rm -rf ~/.openclaw
 
 ## 📚 Documentação
 
+### 🌐 Acesso via HTTPS
+📘 **Leia**: [CLOUDFLARE_TUNNEL.md](CLOUDFLARE_TUNNEL.md) - Guia completo de Cloudflare Tunnel
+
+**Opções de acesso seguro:**
+1. **Túnel SSH** - Simples e rápido
+2. **Cloudflare Tunnel** - HTTPS gratuito + DDoS protection
+3. **Caddy** - Proxy reverso com SSL automático
+
 ### 🏗️ Como Funciona Este Instalador?
 📘 **Leia**: [COMO_FUNCIONA.md](COMO_FUNCIONA.md) - Explica a arquitetura completa
 
@@ -149,6 +198,16 @@ sudo ufw --force enable
 
 ### 📘 Guia Completo de Troubleshooting
 **Leia**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Todos os problemas e soluções
+
+### Erro: control ui requires device identity
+
+**Use túnel SSH ou Cloudflare Tunnel** - veja [CLOUDFLARE_TUNNEL.md](CLOUDFLARE_TUNNEL.md)
+
+```bash
+# Túnel SSH (rápido)
+ssh -L 18789:localhost:18789 root@SEU_SERVIDOR
+# Depois acesse: http://localhost:18789
+```
 
 ### Erro: EACCES permission denied
 
