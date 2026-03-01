@@ -55,29 +55,49 @@ install_openclaw() {
     INSTANCE_URL=""
     USE_DOMAIN="n"
     
+    echo ""
     if prompt_yes_no "Do you have a domain for this installation?" "n"; then
         USE_DOMAIN="y"
-        DOMAIN=$(prompt_input "Enter your domain (e.g., openclaw.example.com)")
+        echo ""
+        echo -e "${COLOR_INFO}Examples:${COLOR_RESET}"
+        echo "  - openclaw.example.com"
+        echo "  - claw.yourdomain.com"
+        echo "  - ai.company.com"
+        echo ""
         
-        if [ -n "$DOMAIN" ]; then
-            echo ""
-            log_info "Domain configuration will be set up..."
-            INSTANCE_URL="https://$DOMAIN"
-            
-            # Load DNS and proxy libs if not loaded
-            if ! command -v validate_dns &> /dev/null; then
-                source "$LIB_DIR/dns.sh"
-            fi
-            if ! command -v setup_proxy &> /dev/null; then
-                source "$LIB_DIR/proxy.sh"
-            fi
-            
-            echo ""
-            log_warn "After OpenClaw installation, we'll configure:"
-            echo "  1. DNS validation"
-            echo "  2. Traefik proxy with SSL"
-            echo "  3. HTTPS redirect"
+        DOMAIN=$(prompt_input "Enter your domain")
+        
+        # Remove protocol if user included it
+        DOMAIN=$(echo "$DOMAIN" | sed 's|^https\?://||' | sed 's|/$||')
+        
+        if [ -z "$DOMAIN" ]; then
+            log_error "Domain cannot be empty"
+            return 1
         fi
+        
+        echo ""
+        log_success "Domain: $DOMAIN"
+        echo ""
+        log_info "Make sure your DNS is configured:"
+        echo -e "  ${COLOR_INFO}A Record:${COLOR_RESET} $DOMAIN → $PUBLIC_IP"
+        echo ""
+        
+        INSTANCE_URL="https://$DOMAIN"
+        
+        # Load DNS and proxy libs if not loaded
+        if ! command -v validate_dns &> /dev/null; then
+            source "$LIB_DIR/dns.sh"
+        fi
+        if ! command -v setup_proxy &> /dev/null; then
+            source "$LIB_DIR/proxy.sh"
+        fi
+        
+        echo ""
+        log_warn "After OpenClaw installation, we'll configure:"
+        echo "  1. DNS validation"
+        echo "  2. Traefik proxy with SSL"
+        echo "  3. HTTPS redirect"
+        echo "  4. Auto-renewal (90 days)"
     else
         INSTANCE_URL="http://$PUBLIC_IP:18789"
         log_info "Will use IP-based access: $INSTANCE_URL"
@@ -139,8 +159,19 @@ install_openclaw() {
             echo ""
             
             # Ask for email for Let's Encrypt
-            EMAIL=$(prompt_input "Enter email for Let's Encrypt notifications" "admin@$DOMAIN")
+            echo -e "${COLOR_INFO}📧 Email for SSL certificate notifications:${COLOR_RESET}"
+            echo "  Let's Encrypt will send renewal reminders to this email"
+            echo ""
+            EMAIL=$(prompt_input "Enter your email" "admin@$DOMAIN")
             
+            # Validate email format (basic)
+            if [[ ! "$EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                log_warn "Email format may be invalid, but continuing..."
+            fi
+            
+            echo ""
+            log_success "Email: $EMAIL"
+            echo ""
             log_info "Configuring Traefik proxy with SSL..."
             
             # Create proxy configuration
