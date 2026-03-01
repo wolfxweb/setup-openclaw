@@ -191,8 +191,24 @@ chown 1000:1000 "$HOME/.openclaw/openclaw.json"
 
 echo -e "${GREEN}✓ Configuração criada${NC}"
 
-# Criar docker-compose.yml simplificado
-cat > docker-compose.override.yml << COMPOSEEOF
+# Criar arquivo .env para docker-compose
+cat > .env << ENVEOF
+OPENCLAW_CONFIG_DIR=$HOME/.openclaw
+OPENCLAW_WORKSPACE_DIR=$HOME/.openclaw/workspace
+OPENCLAW_GATEWAY_TOKEN=$GATEWAY_TOKEN
+OPENCLAW_GATEWAY_PORT=18789
+OPENCLAW_GATEWAY_BIND=lan
+OPENCLAW_IMAGE=openclaw:local
+ENVEOF
+
+# Parar containers existentes
+echo -e "${YELLOW}Limpando containers anteriores...${NC}"
+docker compose down -v 2>/dev/null || true
+docker stop openclaw-gateway 2>/dev/null || true
+docker rm openclaw-gateway 2>/dev/null || true
+
+# Criar docker-compose simplificado
+cat > docker-compose.simple.yml << COMPOSEEOF
 services:
   openclaw-gateway:
     image: openclaw:local
@@ -201,19 +217,20 @@ services:
     ports:
       - "127.0.0.1:18789:18789"
     volumes:
-      - $HOME/.openclaw:/home/node/.openclaw
+      - $HOME/.openclaw:/home/node/.openclaw:rw
     environment:
-      - OPENCLAW_CONFIG_DIR=/home/node/.openclaw
-      - OPENCLAW_WORKSPACE_DIR=/home/node/.openclaw/workspace
-      - OPENCLAW_GATEWAY_TOKEN=$GATEWAY_TOKEN
-      - OPENCLAW_GATEWAY_PORT=18789
-      - OPENCLAW_GATEWAY_BIND=lan
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: $GATEWAY_TOKEN
+      OPENCLAW_GATEWAY_PORT: "18789"
+      OPENCLAW_GATEWAY_BIND: lan
     user: "1000:1000"
-    command: ["gateway", "--port", "18789", "--bind", "lan"]
+    working_dir: /app
+    command: ["node", "dist/index.js", "gateway", "--port", "18789", "--bind", "lan"]
 COMPOSEEOF
 
 echo -e "${BLUE}Iniciando gateway...${NC}"
-docker compose -f docker-compose.yml -f docker-compose.override.yml up -d openclaw-gateway
+docker compose -f docker-compose.simple.yml up -d
 
 echo -e "${GREEN}✓ Gateway iniciado${NC}"
 
