@@ -128,6 +128,30 @@ install_openclaw() {
         return 1
     fi
     
+    # Create secure .env file for OpenClaw
+    echo ""
+    print_section "🔐 Configuring Secure Environment"
+    echo ""
+    
+    log_info "Generating secure credentials..."
+    
+    # Check if .env already exists
+    if [ -f "$OPENCLAW_DIR/.env" ]; then
+        log_warn ".env file already exists"
+        if ! prompt_yes_no "Overwrite existing .env file?" "n"; then
+            log_info "Keeping existing .env"
+        else
+            # Backup existing .env
+            cp "$OPENCLAW_DIR/.env" "$OPENCLAW_DIR/.env.backup.$(date +%Y%m%d-%H%M%S)"
+            log_success "Existing .env backed up"
+            
+            # Generate new credentials
+            create_openclaw_env
+        fi
+    else
+        create_openclaw_env
+    fi
+    
     # Run OpenClaw setup
     echo ""
     log_info "Running docker-setup.sh..."
@@ -410,4 +434,91 @@ EOF
         chmod 600 "$CREDS_FILE"
         log_success "Credentials saved to: $CREDS_FILE"
     fi
+}
+
+create_openclaw_env() {
+    log_info "Creating secure .env file..."
+    
+    # Generate secure credentials
+    local GATEWAY_TOKEN=$(openssl rand -hex 32)
+    local CONFIG_DIR="${HOME}/.openclaw"
+    local WORKSPACE_DIR="${HOME}/.openclaw/workspace"
+    
+    # Ensure .gitignore exists and includes .env
+    if [ -f "$OPENCLAW_DIR/.gitignore" ]; then
+        if ! grep -q "^\.env$" "$OPENCLAW_DIR/.gitignore"; then
+            echo ".env" >> "$OPENCLAW_DIR/.gitignore"
+            log_info "Added .env to .gitignore"
+        fi
+    else
+        echo ".env" > "$OPENCLAW_DIR/.gitignore"
+        log_info "Created .gitignore with .env"
+    fi
+    
+    # Create .env file
+    cat > "$OPENCLAW_DIR/.env" << EOF
+# OpenClaw Environment Configuration
+# Generated: $(date)
+# 
+# ⚠️ SECURITY: This file contains sensitive credentials!
+# - Keep permissions at 600 (owner read/write only)
+# - Do NOT commit to git
+# - Do NOT share publicly
+#
+# Regenerate token: openssl rand -hex 32
+
+# Gateway Configuration
+OPENCLAW_CONFIG_DIR=$CONFIG_DIR
+OPENCLAW_WORKSPACE_DIR=$WORKSPACE_DIR
+OPENCLAW_GATEWAY_PORT=18789
+OPENCLAW_BRIDGE_PORT=18790
+OPENCLAW_GATEWAY_BIND=lan
+OPENCLAW_GATEWAY_TOKEN=$GATEWAY_TOKEN
+
+# Docker Configuration
+OPENCLAW_IMAGE=openclaw:local
+OPENCLAW_EXTRA_MOUNTS=
+OPENCLAW_HOME_VOLUME=
+OPENCLAW_DOCKER_APT_PACKAGES=
+
+# Instance URL (will be set during onboarding)
+# OPENCLAW_INSTANCE_URL=$INSTANCE_URL
+EOF
+    
+    # Set secure permissions
+    chmod 600 "$OPENCLAW_DIR/.env"
+    
+    log_success ".env file created with secure token"
+    echo ""
+    echo -e "${COLOR_INFO}📋 Configuration:${COLOR_RESET}"
+    echo -e "  ${COLOR_INFO}Config dir:${COLOR_RESET} $CONFIG_DIR"
+    echo -e "  ${COLOR_INFO}Workspace:${COLOR_RESET} $WORKSPACE_DIR"
+    echo -e "  ${COLOR_INFO}Gateway port:${COLOR_RESET} 18789"
+    echo -e "  ${COLOR_INFO}Gateway token:${COLOR_RESET} ${COLOR_SUCCESS}$GATEWAY_TOKEN${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_WARN}💾 Token saved to:${COLOR_RESET} $OPENCLAW_DIR/.env"
+    echo -e "${COLOR_WARN}🔒 File permissions:${COLOR_RESET} 600 (secure)"
+    echo ""
+    
+    # Save token to credentials file
+    local TOKEN_FILE="$HOME/.openclaw-gateway-token.txt"
+    cat > "$TOKEN_FILE" << EOF
+OpenClaw Gateway Token
+Generated: $(date)
+
+Gateway Token: $GATEWAY_TOKEN
+Instance URL: $INSTANCE_URL
+Config Location: $OPENCLAW_DIR/.env
+
+To access Control UI:
+1. Open: $INSTANCE_URL
+2. Settings → Gateway Token
+3. Paste: $GATEWAY_TOKEN
+
+Keep this file secure!
+EOF
+    chmod 600 "$TOKEN_FILE"
+    
+    log_success "Token also saved to: $TOKEN_FILE"
+    echo ""
 }

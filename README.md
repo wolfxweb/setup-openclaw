@@ -80,6 +80,7 @@ ssh -L 8080:localhost:8080 root@SEU_SERVIDOR_IP
 
 ## 📚 Documentação
 
+- 📖 [CREDENTIALS_SECURITY.md](CREDENTIALS_SECURITY.md) - **Gestão segura de credenciais (.env)**
 - 📖 [SSL_AUTO_RENEWAL.md](SSL_AUTO_RENEWAL.md) - **SSL automático com Let's Encrypt**
 - 📖 [SECURITY.md](SECURITY.md) - **Guia de segurança completo** (leitura obrigatória!)
 - 📖 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - **Soluções para problemas comuns**
