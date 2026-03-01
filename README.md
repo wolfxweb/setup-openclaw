@@ -149,11 +149,45 @@ sudo chmod -R 755 ~/.openclaw
 
 ## 🔒 Segurança
 
-- ✅ Token gateway gerado automaticamente com 32 bytes
+### Implementado Automaticamente:
+- ✅ Token gateway gerado automaticamente com 32 bytes (256 bits)
 - ✅ Arquivo `.env` com permissões `600` (somente leitura do dono)
 - ✅ Credenciais salvas em arquivo separado
-- ⚠️ **NUNCA** compartilhe seu `OPENCLAW_GATEWAY_TOKEN`
-- ⚠️ **NUNCA** commite o arquivo `.env` no Git
+- ✅ Containers isolados (sem acesso root ao host)
+- ✅ `.env` no `.gitignore` (nunca será commitado)
+
+### Recomendações Importantes:
+
+**⚠️ Configure o Firewall:**
+```bash
+sudo apt install ufw -y
+sudo ufw allow 22/tcp          # SSH
+sudo ufw allow 1455/tcp        # OpenClaw (se usar externamente)
+sudo ufw --force enable
+```
+
+**⚠️ Proteja o SSH:**
+```bash
+# Desabilite login root em /etc/ssh/sshd_config
+PermitRootLogin no
+PasswordAuthentication no
+```
+
+**⚠️ Instale Fail2Ban:**
+```bash
+sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+```
+
+### Guia Completo:
+📖 Veja [SECURITY.md](SECURITY.md) para guia completo de segurança
+
+### Regras de Ouro:
+- ❌ **NUNCA** compartilhe seu `OPENCLAW_GATEWAY_TOKEN`
+- ❌ **NUNCA** exponha porta 1455 sem firewall
+- ❌ **NUNCA** use senha fraca no SSH
+- ✅ **SEMPRE** faça backup das credenciais
+- ✅ **SEMPRE** mantenha o sistema atualizado
 
 ---
 
