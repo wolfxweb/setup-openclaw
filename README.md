@@ -8,9 +8,7 @@ Instalador minimalista para OpenClaw rodando 100% em Docker.
 - ✅ Configura OpenClaw em containers
 - ✅ Gera credenciais seguras automaticamente
 - ✅ Configura permissões corretas
-- ❌ **SEM** configurações complicadas
-- ❌ **SEM** painéis web
-- ❌ **SEM** SSL/Traefik
+- ✅ Instalação simples e direta
 
 ---
 
