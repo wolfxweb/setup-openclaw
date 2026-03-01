@@ -178,21 +178,32 @@ chown -R 1000:1000 "$HOME/.openclaw"
 chmod -R 755 "$HOME/.openclaw"
 
 echo ""
-echo -e "${GREEN}✓ Iniciando instalação automática${NC}"
-echo -e "${BLUE}  Configurações padrão:${NC}"
-echo -e "${BLUE}  - Gateway bind: lan${NC}"
-echo -e "${BLUE}  - Gateway auth: token${NC}"
-echo -e "${BLUE}  - Tailscale: off${NC}"
-echo -e "${BLUE}  - Daemon: no${NC}"
+echo -e "${GREEN}✓ Iniciando instalação do OpenClaw${NC}"
 echo ""
-echo -e "${YELLOW}⚠️  O wizard vai pedir confirmação de segurança${NC}"
-echo -e "${YELLOW}  Respondendo 'yes' automaticamente...${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}📋 INSTRUÇÕES IMPORTANTES:${NC}"
+echo ""
+echo -e "${GREEN}1. Confirmação de Segurança:${NC}"
+echo "   → Responda: ${GREEN}Yes${NC} (Y)"
+echo ""
+echo -e "${GREEN}2. Modo de Configuração:${NC}"
+echo "   → Escolha: ${GREEN}QuickStart${NC} (use setas ↑↓ + ENTER)"
+echo ""
+echo -e "${GREEN}3. Callback OAuth:${NC}"
+echo "   → Digite o IP público desta VPS"
+echo "   → Exemplo: ${BLUE}http://203.0.113.45:1455${NC}"
+echo ""
+echo -e "${GREEN}4. Após autorizar OpenAI:${NC}"
+echo "   → Copie a URL do navegador"
+echo "   → Cole no terminal"
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 sleep 2
 
-# Executar o setup oficial do OpenClaw com respostas automáticas
-# yes responde automaticamente "y" para todas as perguntas
-yes | bash docker-setup.sh || {
+# Executar o setup oficial do OpenClaw
+# Nota: O wizard requer interação manual com setas do teclado
+bash docker-setup.sh || {
     echo ""
     echo -e "${RED}✗ Erro durante a instalação${NC}"
     echo -e "${YELLOW}Tente executar manualmente:${NC}"
