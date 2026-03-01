@@ -30,8 +30,48 @@ install_openclaw() {
     
     cd "$OPENCLAW_DIR"
     
+    # Get public IP for URL suggestion
+    log_info "Detecting public IP..."
+    PUBLIC_IP=$(curl -4 -s --max-time 5 ifconfig.me 2>/dev/null || curl -4 -s --max-time 5 icanhazip.com 2>/dev/null)
+    
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(curl -6 -s --max-time 5 ifconfig.me 2>/dev/null || curl -6 -s --max-time 5 icanhazip.com 2>/dev/null)
+    fi
+    
+    echo ""
+    print_section "⚠️  IMPORTANT: URL Configuration"
+    echo ""
+    if [ -n "$PUBLIC_IP" ]; then
+        echo -e "${COLOR_SUCCESS}✓ Detected Public IP:${COLOR_RESET} $PUBLIC_IP"
+        echo ""
+        echo -e "${COLOR_WARN}When the wizard asks for the instance URL:${COLOR_RESET}"
+        echo ""
+        echo -e "  ${COLOR_INFO}Without domain (direct IP access):${COLOR_RESET}"
+        echo -e "    → Use: ${COLOR_SUCCESS}http://$PUBLIC_IP:18789${COLOR_RESET}"
+        echo ""
+        echo -e "  ${COLOR_INFO}With domain + HTTPS (recommended):${COLOR_RESET}"
+        echo -e "    → Use: ${COLOR_SUCCESS}https://your-domain.com${COLOR_RESET}"
+        echo -e "    → First configure DNS and proxy (option 3 in main menu)"
+    else
+        echo -e "${COLOR_WARN}⚠ Could not detect public IP${COLOR_RESET}"
+        echo ""
+        echo -e "When the wizard asks for the instance URL:"
+        echo -e "  → Use: http://YOUR_SERVER_IP:18789"
+        echo -e "  → Or: https://your-domain.com (if using proxy)"
+    fi
+    echo ""
+    echo -e "${COLOR_ERROR}⚠ DO NOT use 'localhost' or '127.0.0.1' for OAuth!${COLOR_RESET}"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    
+    if ! prompt_yes_no "Ready to continue with OpenClaw setup wizard?" "y"; then
+        log_warn "Installation cancelled"
+        return 1
+    fi
+    
+    echo ""
     log_info "Running docker-setup.sh..."
-    log_warn "The wizard will ask for configuration. Follow the prompts."
     echo ""
     
     if [ -f "./docker-setup.sh" ]; then

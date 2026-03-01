@@ -21,6 +21,8 @@ Sistema profissional de instalação automatizada do **OpenClaw** via Docker com
 
 ## 🚀 Instalação Rápida
 
+⚠️ **IMPORTANTE**: Durante a instalação, o wizard perguntará pela URL da instância. **NÃO use `localhost`**! Use o IP público da sua VPS (exemplo: `http://203.0.113.50:18789`) ou seu domínio (exemplo: `https://openclaw.seudominio.com`).
+
 ### Método 1: Clone Manual (Recomendado)
 
 ```bash
@@ -71,6 +73,7 @@ ssh -L 8080:localhost:8080 root@SEU_SERVIDOR_IP
 ## 📚 Documentação
 
 - 📖 [SECURITY.md](SECURITY.md) - **Guia de segurança completo** (leitura obrigatória!)
+- 📖 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - **Soluções para problemas comuns**
 - 📖 [ARCHITECTURE.md](ARCHITECTURE.md) - Arquitetura do sistema
 - 📖 [QUICKSTART.md](QUICKSTART.md) - Guia rápido
 - 📖 [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Resumo técnico
