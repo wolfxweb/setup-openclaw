@@ -1,12 +1,70 @@
 #!/bin/bash
 # SetupOpenClaw - Professional OpenClaw Docker Installer
-# https://github.com/openclaw/openclaw
+# https://github.com/wolfxweb/setup-openclaw
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Detect script directory
+if [ -n "$BASH_SOURCE" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
 
-# Source all libraries
+# If running via curl pipe, download the full installer
+if [ "$SCRIPT_DIR" = "/dev/fd" ] || [ ! -f "$SCRIPT_DIR/lib/ui.sh" ]; then
+    echo "=================================="
+    echo "SetupOpenClaw - Installation"
+    echo "=================================="
+    echo ""
+    echo "Detected: Running via curl | bash"
+    echo "Downloading full installer..."
+    echo ""
+    
+    # Create temp directory
+    TEMP_DIR="/tmp/setup-openclaw-$$"
+    mkdir -p "$TEMP_DIR"
+    
+    # Download installer
+    if ! curl -fsSL https://github.com/wolfxweb/setup-openclaw/archive/refs/heads/main.tar.gz -o "$TEMP_DIR/installer.tar.gz"; then
+        echo "ERROR: Failed to download installer"
+        echo ""
+        echo "Please use manual installation:"
+        echo "  git clone https://github.com/wolfxweb/setup-openclaw.git /root/setup-openclaw"
+        echo "  cd /root/setup-openclaw/installer"
+        echo "  sudo ./install.sh"
+        exit 1
+    fi
+    
+    # Extract
+    tar -xzf "$TEMP_DIR/installer.tar.gz" -C "$TEMP_DIR"
+    
+    # Find extracted directory
+    EXTRACTED_DIR=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "setup-openclaw-*" | head -1)
+    
+    if [ -z "$EXTRACTED_DIR" ]; then
+        echo "ERROR: Failed to extract installer"
+        exit 1
+    fi
+    
+    # Move to /root/setup-openclaw if not exists
+    if [ ! -d /root/setup-openclaw ]; then
+        mv "$EXTRACTED_DIR" /root/setup-openclaw
+        echo "✓ Installer downloaded to /root/setup-openclaw"
+    else
+        echo "✓ Using existing /root/setup-openclaw"
+    fi
+    
+    # Cleanup temp
+    rm -rf "$TEMP_DIR"
+    
+    # Re-execute from the correct location
+    echo "✓ Launching installer..."
+    echo ""
+    exec /root/setup-openclaw/installer/install.sh "$@"
+fi
+
+# Source all libraries (now we're sure they exist)
 source "$SCRIPT_DIR/lib/ui.sh"
 source "$SCRIPT_DIR/lib/system.sh"
 source "$SCRIPT_DIR/lib/docker.sh"
