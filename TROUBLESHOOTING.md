@@ -40,6 +40,118 @@ O container OpenClaw roda com o usuário `node` (UID 1000). Os arquivos precisam
 
 ---
 
+---
+
+## ❌ Erro: device signature expired
+
+### Descrição do erro:
+```
+device signature expired
+```
+
+ou no log do gateway:
+
+```
+closed before connect ... reason=device signature expired
+```
+
+### Causa:
+O OpenClaw usa assinatura de dispositivo para segurança. A assinatura pode expirar por:
+- Cache/cookies antigos do navegador
+- Sessão antiga armazenada no LocalStorage
+- Gateway reiniciado mas navegador com sessão antiga
+- Conflito entre HTTP e HTTPS
+
+### ✅ Solução 1: Limpar cache do navegador (Recomendada)
+
+**Chrome/Edge:**
+1. Pressione `F12` (abrir DevTools)
+2. Vá em **Application** (ou **Aplicativo**)
+3. Clique em **Storage** > **Clear site data**
+4. Ou use `Ctrl+Shift+Delete`:
+   - ✅ Cookies e outros dados do site
+   - ✅ Imagens e arquivos em cache
+   - ✅ Dados hospedados de apps
+5. Recarregue com `Ctrl+F5`
+
+**Firefox:**
+1. `Ctrl+Shift+Delete`
+2. Marque:
+   - ✅ Cookies
+   - ✅ Cache
+3. Clique em **Limpar agora**
+
+**Safari:**
+1. `Cmd+Option+E` (limpar cache)
+2. Ou **Safari** > **Limpar Histórico**
+
+---
+
+### ✅ Solução 2: Modo anônimo/privado
+
+Teste em uma janela anônima (sem cache):
+
+- **Chrome/Edge:** `Ctrl+Shift+N`
+- **Firefox:** `Ctrl+Shift+P`
+- **Safari:** `Cmd+Shift+N`
+
+Depois acesse:
+```
+https://seu-dominio.com.br
+```
+
+---
+
+### ✅ Solução 3: Reiniciar o gateway
+
+O gateway pode precisar ser reiniciado para gerar novas assinaturas:
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose restart openclaw-gateway
+```
+
+Aguarde 5-10 segundos e tente novamente.
+
+---
+
+### ✅ Solução 4: Túnel SSH (100% garantido)
+
+Se nada funcionar, use túnel SSH que sempre funciona:
+
+No seu computador local:
+```bash
+ssh -L 18789:localhost:18789 root@SEU_SERVIDOR
+```
+
+Acesse:
+```
+http://localhost:18789
+```
+
+---
+
+### ✅ Solução 5: Verificar configuração
+
+Confirme que o domínio está em `allowedOrigins`:
+
+```bash
+cat ~/.openclaw/openclaw.json | grep -A 10 '"allowedOrigins"'
+```
+
+Deve incluir seu domínio com HTTPS:
+```json
+{
+  "allowedOrigins": [
+    "http://127.0.0.1:18789",
+    "http://localhost:18789",
+    "https://seu-dominio.com.br"
+  ]
+}
+```
+
+---
+
 ## ❌ Erro: origin not allowed
 
 ### Descrição do erro:

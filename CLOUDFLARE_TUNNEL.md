@@ -282,6 +282,35 @@ nslookup seu-dominio.com.br 8.8.8.8
 
 Deve mostrar IPs do Cloudflare (104.x.x.x ou 172.x.x.x) em vez do seu IP do servidor.
 
+### Erro: device signature expired
+
+**Causa:** Cache/cookies antigos ou sessão expirada no navegador.
+
+**Solução:**
+
+1. **Limpar cache do navegador:**
+   - Chrome: `F12` > `Application` > `Storage` > `Clear site data`
+   - Ou `Ctrl+Shift+Delete` e limpar cookies + cache
+
+2. **Modo anônimo:**
+   - Chrome/Edge: `Ctrl+Shift+N`
+   - Firefox: `Ctrl+Shift+P`
+   - Teste em janela anônima
+
+3. **Reiniciar gateway:**
+   ```bash
+   cd ~/.openclaw/openclaw
+   docker compose restart openclaw-gateway
+   ```
+
+4. **Se nada funcionar, use túnel SSH:**
+   ```bash
+   ssh -L 18789:localhost:18789 root@SEU_SERVIDOR
+   ```
+   Acesse: `http://localhost:18789`
+
+---
+
 ### Túnel não conecta
 
 **Verificar:**
