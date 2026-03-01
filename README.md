@@ -29,9 +29,36 @@ Sistema profissional de instalação automatizada do **OpenClaw** via Docker com
 
 ## 🚀 Instalação Rápida
 
-⚠️ **IMPORTANTE**: Durante a instalação, o wizard perguntará pela URL da instância. **NÃO use `localhost`**! Use o IP público da sua VPS (exemplo: `http://203.0.113.50:18789`) ou seu domínio (exemplo: `https://openclaw.seudominio.com`).
+### 🖥️ Para Iniciantes: Interface Gráfica (Recomendado!)
 
-💡 **DICA**: Prefere interface gráfica? Veja [X11_GUI_INSTALL.md](X11_GUI_INSTALL.md) para instalar usando janelas gráficas via X11 forwarding!
+**Prefere janelas gráficas ao invés de terminal?**
+
+1. **Primeiro, instale no SEU computador:**
+   - **Windows**: [VcXsrv](https://sourceforge.net/projects/vcxsrv/) (gratuito)
+   - **macOS**: `brew install --cask xquartz` ou [XQuartz.org](https://www.xquartz.org/)
+   - **Linux**: Já vem instalado! ✅
+
+2. **Depois, conecte com X11:**
+   ```bash
+   # Windows/Linux:
+   ssh -X root@SEU_IP_SERVIDOR
+   
+   # macOS:
+   ssh -Y root@SEU_IP_SERVIDOR
+   ```
+
+3. **Execute o instalador:**
+   ```bash
+   bash <(curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/installer/install.sh)
+   ```
+
+📖 **Tutorial completo:** [X11_GUI_INSTALL.md](X11_GUI_INSTALL.md)
+
+---
+
+### 💻 Para Usuários Avançados: Terminal
+
+⚠️ **IMPORTANTE**: Durante a instalação, o wizard perguntará pela URL da instância. **NÃO use `localhost`**! Use o IP público da sua VPS (exemplo: `http://203.0.113.50:18789`) ou seu domínio (exemplo: `https://openclaw.seudominio.com`).
 
 ### Método 1: Clone Manual (Recomendado)
 

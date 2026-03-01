@@ -4,7 +4,31 @@
 
 O instalador do SetupOpenClaw usa `whiptail` que **já suporta interface gráfica** via X11 forwarding!
 
-### Vantagens
+⚠️ **IMPORTANTE: Instale ANTES de conectar no servidor!**
+
+### ⚡ Início Rápido (3 passos)
+
+**1️⃣ Instale no SEU computador (não no servidor):**
+- **Windows**: Baixe [VcXsrv](https://sourceforge.net/projects/vcxsrv/) e instale
+- **macOS**: `brew install --cask xquartz` 
+- **Linux**: Já tem! ✅
+
+**2️⃣ Conecte com X11 habilitado:**
+```bash
+ssh -X root@SEU_IP_SERVIDOR    # Windows/Linux
+ssh -Y root@SEU_IP_SERVIDOR    # macOS
+```
+
+**3️⃣ Execute o instalador:**
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/installer/install.sh)
+```
+
+**Janelas gráficas vão aparecer no seu computador!** 🎉
+
+---
+
+## Vantagens
 
 ✅ **Janelas gráficas** ao invés de terminal texto  
 ✅ **Mais fácil** para iniciantes  
