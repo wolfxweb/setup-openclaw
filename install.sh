@@ -100,9 +100,37 @@ echo "5. ${GREEN}Cole a URL de callback${NC} no terminal"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-sleep 3
+# Verificar se está rodando via pipe (curl | bash)
+if [ ! -t 0 ]; then
+    # Rodando via pipe - não pode ser interativo
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}⚠️  DETECTADO: Instalação via pipe (curl | bash)${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "O wizard do OpenClaw requer terminal interativo."
+    echo ""
+    echo -e "${GREEN}✓ Ambiente preparado com sucesso!${NC}"
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}📋 Para completar a instalação, execute:${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${GREEN}  cd ~/.openclaw/openclaw && bash docker-setup.sh${NC}"
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Depois, siga as instruções do wizard:"
+    echo "  1. Responda 'Yes' no aviso de segurança"
+    echo "  2. Escolha 'QuickStart' (setas + ENTER)"
+    echo "  3. Selecione 'OpenAI' como provider"
+    echo "  4. Configure OAuth no navegador"
+    echo ""
+    exit 0
+fi
 
-# Executar o instalador oficial
+# Terminal interativo - pode rodar o wizard
+sleep 3
 bash docker-setup.sh
 
 #======================================
