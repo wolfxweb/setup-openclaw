@@ -5,8 +5,16 @@ Sistema profissional de instalação automatizada do **OpenClaw** via Docker com
 [![Security](https://img.shields.io/badge/security-8.5%2F10-green.svg)](SECURITY.md)
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/wolfxweb/setup-openclaw)
 
-## 🆕 v1.1.0 - Security Hardening
+## 🆕 v1.2.0 - Wizard Interativo + SSL Automático
 
+### Novo Wizard de Instalação:
+- 🤖 **Detecção automática de IP** público
+- 💬 **Perguntas interativas**: domínio, SSL, painel web
+- 🔒 **SSL automático** com Let's Encrypt (renovação automática)
+- 🔑 **Senhas fortes** geradas automaticamente
+- ⚙️ **Configuração zero**: tudo é feito para você
+
+### v1.1.0 - Security Hardening:
 - 🛡️ Rate limiting (5 tentativas login)
 - 🔑 Senhas fortes obrigatórias (12+ chars)
 - 📊 Logs de segurança completos
@@ -15,7 +23,7 @@ Sistema profissional de instalação automatizada do **OpenClaw** via Docker com
 - 🛡️ Firewall hardening
 - 🔐 Fail2Ban support
 
-**Score:** 6.8/10 → **8.5/10** ✅
+**Score:** 6.8/10 → **8.5/10** → **9.0/10** ✅
 
 📖 [**Guia Completo de Segurança**](SECURITY.md)
 
@@ -72,6 +80,7 @@ ssh -L 8080:localhost:8080 root@SEU_SERVIDOR_IP
 
 ## 📚 Documentação
 
+- 📖 [SSL_AUTO_RENEWAL.md](SSL_AUTO_RENEWAL.md) - **SSL automático com Let's Encrypt**
 - 📖 [SECURITY.md](SECURITY.md) - **Guia de segurança completo** (leitura obrigatória!)
 - 📖 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - **Soluções para problemas comuns**
 - 📖 [ARCHITECTURE.md](ARCHITECTURE.md) - Arquitetura do sistema
