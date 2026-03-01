@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+/var/log/
+
+# Environment variables
+.env
+*.env
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+letsencrypt/
+
+# Secrets
+*.pem
+*.key
+*.crt

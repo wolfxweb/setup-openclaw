@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SetupOpenClaw Panel{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .terminal { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    {% if request.session.get('user') %}
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold">🦞 SetupOpenClaw</h1>
+                <span class="text-sm opacity-75">Professional Installer</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">👤 {{ request.session.get('user') }}</span>
+                <a href="/logs" class="hover:bg-blue-700 px-3 py-2 rounded">📋 Logs</a>
+                <a href="/logout" class="hover:bg-blue-700 px-3 py-2 rounded">🚪 Sair</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="text-center text-gray-500 text-sm py-4 mt-8">
+        SetupOpenClaw v1.0.0 | Sistema profissional de instalação Docker para OpenClaw
+    </footer>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
