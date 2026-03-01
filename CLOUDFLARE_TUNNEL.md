@@ -84,19 +84,40 @@ ingress:
 
 ### 5. Criar Registro DNS
 
+#### **Opção A: Via comando (Recomendado)**
+
 ```bash
 cloudflared tunnel route dns openclaw-gateway openclaw.seu-dominio.com.br
 ```
 
-**Nota:** Se o registro DNS já existir, você pode atualizá-lo manualmente no painel do Cloudflare:
+**Se o registro já existir:**
 
-1. Acesse https://dash.cloudflare.com
-2. Selecione seu domínio
-3. Vá em **DNS** > **Records**
-4. Adicione um registro **CNAME**:
+```bash
+cloudflared tunnel route dns --overwrite-dns openclaw-gateway openclaw.seu-dominio.com.br
+```
+
+#### **Opção B: Manual no painel Cloudflare**
+
+Se você já tem um registro A ou CNAME antigo:
+
+1. **Acesse:** https://dash.cloudflare.com
+2. **Selecione** seu domínio
+3. **Vá em:** DNS > Records
+4. **Delete** o registro antigo (se existir)
+5. **Clique em:** "Add record"
+6. **Preencha:**
+   - **Type:** `CNAME`
    - **Name:** `openclaw` (ou seu subdomínio)
    - **Target:** `SEU_TUNNEL_ID.cfargotunnel.com`
-   - **Proxy status:** ✅ Proxied (laranja)
+     - Exemplo: `e7751658-8754-4352-ac1a-4da9504d0223.cfargotunnel.com`
+   - **Proxy status:** ✅ **Proxied** (nuvem laranja)
+   - **TTL:** `Auto`
+7. **Salve**
+
+⚠️ **IMPORTANTE:** 
+- Não use IP no campo "Target" de um registro CNAME
+- Se aparecer erro "invalid", delete o registro antigo primeiro
+- Use o Tunnel ID completo seguido de `.cfargotunnel.com`
 
 ### 6. Atualizar OpenClaw
 
@@ -232,13 +253,34 @@ Verifique se o arquivo `.json` existe. O nome deve corresponder ao seu Tunnel ID
 
 ### Erro: "Failed to create route: record already exists"
 
-**Solução:**
+**Causa:** O registro DNS já existe (geralmente um A record apontando para o IP do servidor).
 
-O registro DNS já existe. Atualize manualmente no painel do Cloudflare ou remova o registro antigo:
+**Solução 1 - Via comando (Mais fácil):**
 
 ```bash
 cloudflared tunnel route dns --overwrite-dns openclaw-gateway openclaw.seu-dominio.com.br
 ```
+
+Este comando vai sobrescrever o registro antigo automaticamente.
+
+**Solução 2 - Manual:**
+
+1. Acesse https://dash.cloudflare.com
+2. Vá em **DNS** > **Records**
+3. **Delete** o registro antigo
+4. **Adicione** um novo CNAME:
+   - **Type:** `CNAME`
+   - **Name:** Seu subdomínio (ex: `openclaw`)
+   - **Target:** `SEU_TUNNEL_ID.cfargotunnel.com`
+   - **Proxy:** ✅ Proxied
+
+**Verificar se funcionou:**
+
+```bash
+nslookup seu-dominio.com.br 8.8.8.8
+```
+
+Deve mostrar IPs do Cloudflare (104.x.x.x ou 172.x.x.x) em vez do seu IP do servidor.
 
 ### Túnel não conecta
 
@@ -259,17 +301,79 @@ cloudflared tunnel route dns --overwrite-dns openclaw-gateway openclaw.seu-domin
    cat /root/.cloudflared/config.yml
    ```
 
-### Gateway não aceita origem
+### Gateway não aceita origem (origin not allowed)
+
+**Causa:** O domínio não está na lista de origens permitidas do OpenClaw.
 
 **Solução:**
 
-Verifique se o domínio está em `allowedOrigins`:
+1. Verifique se o domínio está em `allowedOrigins`:
 
 ```bash
 cat ~/.openclaw/openclaw.json | grep -A 10 '"allowedOrigins"'
 ```
 
-Adicione seu domínio se estiver faltando.
+2. Se estiver faltando, adicione:
+
+```bash
+cd ~/.openclaw && python3 << 'PYTHONEOF'
+import json
+
+DOMINIO = "https://seu-dominio.com.br"
+
+with open('openclaw.json', 'r') as f:
+    config = json.load(f)
+
+origins = config['gateway']['controlUi']['allowedOrigins']
+if DOMINIO not in origins:
+    origins.append(DOMINIO)
+    
+with open('openclaw.json', 'w') as f:
+    json.dump(config, f, indent=2)
+    
+print(f"✓ {DOMINIO} adicionado!")
+PYTHONEOF
+```
+
+3. Reinicie o gateway:
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose restart openclaw-gateway
+```
+
+### DNS não propaga
+
+**Verificar DNS:**
+
+```bash
+# DNS local
+nslookup seu-dominio.com.br
+
+# DNS Google (mais atualizado)
+nslookup seu-dominio.com.br 8.8.8.8
+
+# DNS Cloudflare
+nslookup seu-dominio.com.br 1.1.1.1
+```
+
+**Se ainda mostrar IP antigo:**
+
+1. Limpe o cache DNS local:
+   ```bash
+   # Linux
+   sudo systemd-resolve --flush-caches
+   
+   # Windows
+   ipconfig /flushdns
+   
+   # Mac
+   sudo dscacheutil -flushcache
+   ```
+
+2. Aguarde 5-10 minutos para propagação global
+
+3. Teste em modo anônimo/privado do navegador
 
 ---
 
@@ -279,6 +383,116 @@ Adicione seu domínio se estiver faltando.
 - **Dashboard Cloudflare:** https://dash.cloudflare.com
 - **Cloudflare Zero Trust:** https://one.dash.cloudflare.com
 - **Status Cloudflare:** https://www.cloudflarestatus.com
+
+---
+
+## 📝 Exemplo Prático Completo
+
+Este é um exemplo real de configuração que foi testada e funcionou:
+
+### Cenário:
+- **Servidor:** VPS com IP `207.231.108.38`
+- **Domínio:** `socx.celx.com.br`
+- **Túnel ID:** `e7751658-8754-4352-ac1a-4da9504d0223`
+
+### Passo a Passo:
+
+**1. Instalação:**
+```bash
+curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+```
+
+**2. Autenticação:**
+```bash
+cloudflared tunnel login
+# Abrir URL no navegador e autorizar
+```
+
+**3. Criar túnel:**
+```bash
+cloudflared tunnel create openclaw-gateway
+# Output: Created tunnel openclaw-gateway with id e7751658-8754-4352-ac1a-4da9504d0223
+```
+
+**4. Configurar arquivo:**
+```bash
+cat > /root/.cloudflared/config.yml << 'EOF'
+tunnel: e7751658-8754-4352-ac1a-4da9504d0223
+credentials-file: /root/.cloudflared/e7751658-8754-4352-ac1a-4da9504d0223.json
+
+ingress:
+  - hostname: socx.celx.com.br
+    service: http://localhost:18789
+  - service: http_status:404
+EOF
+```
+
+**5. Criar DNS (com overwrite porque já existia um A record):**
+```bash
+cloudflared tunnel route dns --overwrite-dns openclaw-gateway socx.celx.com.br
+```
+
+**6. Atualizar OpenClaw:**
+```bash
+cd ~/.openclaw
+# Backup
+cp openclaw.json openclaw.json.backup
+
+# Atualizar allowedOrigins
+python3 << 'PYTHONEOF'
+import json
+
+with open('openclaw.json', 'r') as f:
+    config = json.load(f)
+
+config['gateway']['controlUi']['allowedOrigins'] = [
+    "http://127.0.0.1:18789",
+    "http://localhost:18789",
+    "https://socx.celx.com.br"
+]
+
+with open('openclaw.json', 'w') as f:
+    json.dump(config, f, indent=2)
+
+print("✓ Configurado!")
+PYTHONEOF
+```
+
+**7. Reiniciar gateway:**
+```bash
+cd ~/.openclaw/openclaw
+docker compose restart openclaw-gateway
+```
+
+**8. Instalar como serviço:**
+```bash
+cloudflared service install
+systemctl start cloudflared
+systemctl enable cloudflared
+```
+
+**9. Verificar:**
+```bash
+# Status do túnel
+systemctl status cloudflared
+
+# Verificar DNS
+nslookup socx.celx.com.br 8.8.8.8
+# Deve mostrar: 172.67.204.160 e 104.21.85.107 (IPs Cloudflare)
+```
+
+**10. Acessar:**
+```
+https://socx.celx.com.br
+```
+
+**Token:**
+```
+418021e09d3f22bb9096ea78980a2fb916f9c1f7ccb60e30
+```
+
+✅ **Funcionou!**
 
 ---
 
