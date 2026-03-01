@@ -85,12 +85,25 @@ cd openclaw
 echo -e "${GREEN}✓ OpenClaw baixado${NC}"
 
 #======================================
-# 5. Executar instalador oficial
+# 5. Build da imagem Docker (antes do wizard)
 #======================================
-echo -e "${YELLOW}[5/5]${NC} Executando instalador oficial do OpenClaw..."
+echo -e "${YELLOW}[5/6]${NC} Compilando OpenClaw (isso pode demorar 3-5 minutos)..."
+
+# Fazer build da imagem antes do wizard
+docker build -t openclaw:local -f Dockerfile . || {
+    echo -e "${RED}✗ Erro no build do Docker${NC}"
+    exit 1
+}
+
+echo -e "${GREEN}✓ OpenClaw compilado${NC}"
+
+#======================================
+# 6. Configurar e iniciar (wizard interativo)
+#======================================
+echo -e "${YELLOW}[6/6]${NC} Configurando OpenClaw..."
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}📋 INSTRUÇÕES:${NC}"
+echo -e "${YELLOW}📋 INSTRUÇÕES DO WIZARD:${NC}"
 echo ""
 echo "1. ${GREEN}Confirme o aviso de segurança${NC} (Yes)"
 echo "2. ${GREEN}Escolha 'QuickStart'${NC} (use setas + ENTER)"
@@ -100,37 +113,28 @@ echo "5. ${GREEN}Cole a URL de callback${NC} no terminal"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
+
 # Verificar se está rodando via pipe (curl | bash)
 if [ ! -t 0 ]; then
     # Rodando via pipe - não pode ser interativo
-    echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}⚠️  DETECTADO: Instalação via pipe (curl | bash)${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "O wizard do OpenClaw requer terminal interativo."
+    echo "✓ Build concluído! Agora precisa de terminal interativo."
     echo ""
-    echo -e "${GREEN}✓ Ambiente preparado com sucesso!${NC}"
+    echo -e "${GREEN}Para completar, execute:${NC}"
     echo ""
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}📋 Para completar a instalação, execute:${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}  cd ~/.openclaw/openclaw && bash docker-setup.sh${NC}"
     echo ""
-    echo -e "${GREEN}  cd ~/.openclaw/openclaw && bash docker-setup.sh${NC}"
-    echo ""
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    echo "Depois, siga as instruções do wizard:"
-    echo "  1. Responda 'Yes' no aviso de segurança"
-    echo "  2. Escolha 'QuickStart' (setas + ENTER)"
-    echo "  3. Selecione 'OpenAI' como provider"
-    echo "  4. Configure OAuth no navegador"
+    echo "O wizard vai começar direto (build já foi feito!)"
     echo ""
     exit 0
 fi
 
 # Terminal interativo - pode rodar o wizard
-sleep 3
+# Como já fizemos o build, o docker-setup.sh vai pular essa etapa
+export OPENCLAW_IMAGE=openclaw:local
 bash docker-setup.sh
 
 #======================================
