@@ -147,23 +147,40 @@ sudo ufw --force enable
 
 ## 🆘 Problemas Comuns
 
-### Erro de permissão Docker
+### 📘 Guia Completo de Troubleshooting
+**Leia**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Todos os problemas e soluções
+
+### Erro: EACCES permission denied
 
 ```bash
-sudo usermod -aG docker $USER
-newgrp docker
+mkdir -p ~/.openclaw/workspace ~/.openclaw/workspace/.agents
+chown -R 1000:1000 ~/.openclaw
+chmod -R 755 ~/.openclaw
+cd ~/.openclaw/openclaw && bash docker-setup.sh
+```
+
+### Erro: origin not allowed
+
+```bash
+PUBLIC_IP=$(curl -s https://ifconfig.me)
+# Editar ~/.openclaw/openclaw.json e adicionar seu IP em allowedOrigins
+# Depois: cd ~/.openclaw/openclaw && docker compose restart openclaw-gateway
 ```
 
 ### Containers não iniciam
 
 ```bash
 cd ~/.openclaw/openclaw
-docker compose logs
+docker compose logs -f
 ```
 
-### Reinstalar
+### Reinstalar do zero
 
 ```bash
+cd ~/.openclaw/openclaw && docker compose down -v
+docker ps -a | grep openclaw | awk '{print $1}' | xargs -r docker rm -f
+rm -rf ~/.openclaw
+docker system prune -af --volumes
 curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/install.sh | bash
 ```
 
@@ -192,6 +209,6 @@ MIT License - Veja [LICENSE](LICENSE) para detalhes.
 Este é um wrapper não-oficial que facilita o uso do instalador oficial do OpenClaw.  
 OpenClaw é desenvolvido por [OpenClaw Team](https://github.com/OpenClaw/openclaw).
 
-**Versão**: 4.0.0 - Wrapper do Instalador Oficial  
+**Versão**: 4.2.0 - Permissões e Acesso Remoto Automático  
 **Autor**: wolfxweb  
 **Repositório**: https://github.com/wolfxweb/setup-openclaw

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #======================================
-# OpenClaw - Instalador Oficial v4
+# OpenClaw - Instalador Oficial v4.2
 # Baseado 100% na documentação oficial
 #======================================
 
@@ -63,15 +63,19 @@ fi
 echo -e "${GREEN}✓ Limpeza concluída${NC}"
 
 #======================================
-# 3. Criar diretórios e permissões
+# 3. Criar diretórios e permissões (IMPORTANTE!)
 #======================================
 echo -e "${YELLOW}[3/5]${NC} Preparando ambiente..."
 
-mkdir -p "$HOME/.openclaw"
+# Criar estrutura completa de diretórios
+mkdir -p "$HOME/.openclaw/workspace"
+mkdir -p "$HOME/.openclaw/workspace/.agents"
+
+# Definir permissões ANTES do wizard
 chown -R 1000:1000 "$HOME/.openclaw"
 chmod -R 755 "$HOME/.openclaw"
 
-echo -e "${GREEN}✓ Ambiente preparado${NC}"
+echo -e "${GREEN}✓ Ambiente preparado (workspace + permissões)${NC}"
 
 #======================================
 # 4. Clonar OpenClaw oficial
