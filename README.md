@@ -1,220 +1,187 @@
-# SetupOpenClaw
+# 🚀 OpenClaw - Instalador Docker Simples
 
-Sistema profissional de instalação automatizada do **OpenClaw** via Docker com segurança aprimorada.
+Instalador minimalista para OpenClaw rodando 100% em Docker.
 
-[![Security](https://img.shields.io/badge/security-8.5%2F10-green.svg)](SECURITY.md)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/wolfxweb/setup-openclaw)
+## ✨ O que este instalador faz
 
-## 🆕 v1.2.0 - Wizard Interativo + SSL Automático
-
-### Novo Wizard de Instalação:
-- 🤖 **Detecção automática de IP** público
-- 💬 **Perguntas interativas**: domínio, SSL, painel web
-- 🔒 **SSL automático** com Let's Encrypt (renovação automática)
-- 🔑 **Senhas fortes** geradas automaticamente
-- ⚙️ **Configuração zero**: tudo é feito para você
-
-### v1.1.0 - Security Hardening:
-- 🛡️ Rate limiting (5 tentativas login)
-- 🔑 Senhas fortes obrigatórias (12+ chars)
-- 📊 Logs de segurança completos
-- 🚪 Porta 8080 bloqueada por padrão
-- 🔒 Proteção anti-hijacking
-- 🛡️ Firewall hardening
-- 🔐 Fail2Ban support
-
-**Score:** 6.8/10 → **8.5/10** → **9.0/10** ✅
-
-📖 [**Guia Completo de Segurança**](SECURITY.md)
-
-## 🚀 Instalação Rápida
-
-### 🖥️ Para Iniciantes: Interface Gráfica (Recomendado!)
-
-**Prefere janelas gráficas ao invés de terminal?**
-
-1. **Primeiro, instale no SEU computador:**
-   - **Windows**: [VcXsrv](https://sourceforge.net/projects/vcxsrv/) (gratuito)
-   - **macOS**: `brew install --cask xquartz` ou [XQuartz.org](https://www.xquartz.org/)
-   - **Linux**: Já vem instalado! ✅
-
-2. **Depois, conecte com X11:**
-   ```bash
-   # Windows/Linux:
-   ssh -X root@SEU_IP_SERVIDOR
-   
-   # macOS:
-   ssh -Y root@SEU_IP_SERVIDOR
-   ```
-
-3. **Execute o instalador:**
-   ```bash
-   bash <(curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/installer/install.sh)
-   ```
-
-📖 **Tutorial completo:** [X11_GUI_INSTALL.md](X11_GUI_INSTALL.md)
+- ✅ Instala Docker (se necessário)
+- ✅ Configura OpenClaw em containers
+- ✅ Gera credenciais seguras automaticamente
+- ✅ Configura permissões corretas
+- ❌ **SEM** configurações complicadas
+- ❌ **SEM** painéis web
+- ❌ **SEM** SSL/Traefik
 
 ---
 
-### 💻 Para Usuários Avançados: Terminal
+## 📋 Requisitos
 
-⚠️ **IMPORTANTE**: Durante a instalação, o wizard perguntará pela URL da instância. **NÃO use `localhost`**! Use o IP público da sua VPS (exemplo: `http://203.0.113.50:18789`) ou seu domínio (exemplo: `https://openclaw.seudominio.com`).
+- **Sistema**: Ubuntu 20.04+ / Debian 11+
+- **RAM**: Mínimo 4GB
+- **Disco**: Mínimo 20GB livres
+- **Acesso**: Root ou sudo
 
-### Método 1: Clone Manual (Recomendado)
+---
+
+## 🎯 Instalação Rápida
+
+### Método 1: Download direto (recomendado)
 
 ```bash
-git clone https://github.com/wolfxweb/setup-openclaw.git /root/setup-openclaw
-cd /root/setup-openclaw/installer
-sudo ./install.sh
+curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/install.sh | bash
 ```
 
-### Método 2: Comando Único
+### Método 2: Clone o repositório
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/wolfxweb/setup-openclaw/main/installer/install.sh)
+git clone https://github.com/wolfxweb/setup-openclaw.git
+cd setup-openclaw
+bash install.sh
 ```
 
-## 📦 Painel Web
+---
+
+## 🔑 Após a Instalação
+
+### Suas credenciais estão salvas em:
 
 ```bash
-cd /root/setup-openclaw/panel
+cat ~/.openclaw-credentials.txt
+```
 
-# Configure senha forte (obrigatório v1.1.0)
-export PANEL_PASSWORD=$(openssl rand -base64 24)
-echo "Sua senha: $PANEL_PASSWORD"  # Guarde esta senha!
+### Verificar status dos containers:
 
+```bash
+cd ~/.openclaw/openclaw
+docker compose ps
+```
+
+### Ver logs em tempo real:
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose logs -f
+```
+
+### Parar OpenClaw:
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose down
+```
+
+### Iniciar OpenClaw:
+
+```bash
+cd ~/.openclaw/openclaw
 docker compose up -d
 ```
 
-**🔒 Acesso Seguro (SSH Tunnel):**
-```bash
-# No seu computador local:
-ssh -L 8080:localhost:8080 root@SEU_SERVIDOR_IP
+---
 
-# Acesse: http://localhost:8080
-# Login: admin
-# Senha: a que você gerou acima
-```
+## ⚠️ Importante durante a instalação
 
-## 🎯 Funcionalidades
+Quando o wizard do OpenClaw pedir a **URL de callback OAuth**:
 
-- ✅ Instalação 100% Docker (fluxo oficial OpenClaw)
-- ✅ Wizard interativo preservado
-- ✅ Proxy Traefik + SSL automático
-- ✅ Painel FastAPI + HTMX
-- ✅ Rate limiting automático
-- ✅ Validação senha forte
-- ✅ Logs de auditoria
-- ✅ Firewall UFW hardening
+1. **Use o IP público da sua VPS**
+   - Exemplo: `http://203.0.113.45:1455`
+   - **NÃO use** `localhost` ou `127.0.0.1`
 
-## 📚 Documentação
-
-- 📖 [X11_GUI_INSTALL.md](X11_GUI_INSTALL.md) - **🖥️ Instalação com interface gráfica (para iniciantes!)**
-- 📖 [DOCKER_CLEANUP.md](DOCKER_CLEANUP.md) - **⚠️ Avisos sobre limpeza de Docker**
-- 📖 [CREDENTIALS_SECURITY.md](CREDENTIALS_SECURITY.md) - **Gestão segura de credenciais (.env)**
-- 📖 [SSL_AUTO_RENEWAL.md](SSL_AUTO_RENEWAL.md) - **SSL automático com Let's Encrypt**
-- 📖 [SECURITY.md](SECURITY.md) - **Guia de segurança completo** (leitura obrigatória!)
-- 📖 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - **Soluções para problemas comuns**
-- 📖 [ARCHITECTURE.md](ARCHITECTURE.md) - Arquitetura do sistema
-- 📖 [QUICKSTART.md](QUICKSTART.md) - Guia rápido
-- 📖 [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Resumo técnico
-
-## 🔒 Segurança
-
-**v1.1.0** implementa proteções profissionais:
-- Rate limiting contra brute force
-- Senhas fortes obrigatórias (min 12 chars)
-- Logs de segurança com auditoria
-- Firewall com default deny
-- SSH hardening automático
-- Session hijacking protection
-
-⚠️ **IMPORTANTE:** Leia [SECURITY.md](SECURITY.md) antes de usar em produção!
-
-**Acesso ao painel:**
-- ✅ **RECOMENDADO**: Via SSH tunnel (porta 8080 bloqueada externamente)
-- ⚠️ **NÃO RECOMENDADO**: Expor porta 8080 publicamente
-
-## 📊 Logs
-
-- **Instalador**: `/var/log/setup-openclaw/install.log`
-- **Segurança**: `/var/log/setup-openclaw/security.log`
-- **Gateway**: `cd /opt/openclaw && docker compose logs`
-
-## 🔄 Atualizar
-
-```bash
-cd /root/setup-openclaw
-git pull origin main
-cd panel && docker compose down && docker compose build && docker compose up -d
-```
-
-## 🔑 Para Desenvolvedores
-
-### Clonar o Repositório
-
-**SSH (Recomendado):**
-```bash
-git clone git@github.com:wolfxweb/setup-openclaw.git
-```
-
-**HTTPS:**
-```bash
-git clone https://github.com/wolfxweb/setup-openclaw.git
-```
-
-### Configurar SSH para Git
-
-Se você já tem uma chave SSH no GitHub:
-```bash
-cd /root/setup-openclaw
-git remote set-url origin git@github.com:wolfxweb/setup-openclaw.git
-git pull origin main
-```
-
-Se você precisa criar uma chave SSH:
-```bash
-ssh-keygen -t ed25519 -C "seu@email.com"
-cat ~/.ssh/id_ed25519.pub  # Adicione esta chave no GitHub
-```
-
-**Adicionar chave no GitHub**: https://github.com/settings/keys
-
-## 📞 Suporte
-
-- **Repositório**: https://github.com/wolfxweb/setup-openclaw
-- **OpenClaw Oficial**: https://github.com/openclaw/openclaw
-- **Issues**: https://github.com/wolfxweb/setup-openclaw/issues
-
-## 📝 Changelog
-
-### v1.1.0 (2024-03-01) - Security Hardening
-- 🔒 Rate limiting (5 login attempts, 10 actions/min)
-- 🔑 Senha forte obrigatória (12+ chars, uppercase, lowercase, number, special)
-- 📊 Logs de segurança completos com auditoria
-- 🛡️ Firewall hardening (default deny, SSH rate limit)
-- 🚪 Porta 8080 bloqueada externamente por padrão
-- 🔐 Session hijacking protection
-- 📖 Guia de segurança completo (SECURITY.md)
-
-### v1.0.0 (2024-02-14) - Release Inicial
-- ✅ Instalador Bash modular
-- ✅ Painel web FastAPI + HTMX
-- ✅ Proxy Traefik com SSL automático
-- ✅ Firewall UFW
-- ✅ Documentação completa
-
-## 🙏 Créditos
-
-- **OpenClaw**: https://openclaw.ai
-- **Traefik**: https://traefik.io
-- **FastAPI**: https://fastapi.tiangolo.com
-- **HTMX**: https://htmx.org
+2. **Após autorizar na OpenAI:**
+   - Copie a URL completa que aparece no navegador
+   - Cole no terminal quando solicitado
+   - A URL começa com `http://localhost:1455/auth/callback?code=...`
 
 ---
 
-**SetupOpenClaw v1.1.0** | Instalação profissional com segurança aprimorada
+## 🗑️ Desinstalar
 
-⭐ **Dê uma estrela no GitHub se este projeto foi útil!**
+```bash
+cd ~/.openclaw/openclaw
+docker compose down -v
+cd ~
+rm -rf ~/.openclaw
+rm -f ~/.openclaw-credentials.txt
+```
 
-**Desenvolvido por:** [wolfxweb](https://github.com/wolfxweb)
+---
+
+## 📚 Estrutura de Arquivos
+
+```
+~/.openclaw/
+├── openclaw/              # Repositório oficial clonado
+│   ├── docker-compose.yml # Configuração Docker
+│   └── ...
+├── workspace/             # Área de trabalho dos agentes
+├── agents/                # Agentes instalados
+└── .env                   # Credenciais (NÃO COMPARTILHAR!)
+
+~/.openclaw-credentials.txt # Suas credenciais de acesso
+```
+
+---
+
+## 🆘 Problemas Comuns
+
+### Erro de permissão Docker
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Containers não iniciam
+
+```bash
+cd ~/.openclaw/openclaw
+docker compose logs
+```
+
+### Erro EACCES ao criar agentes
+
+```bash
+sudo chown -R 1000:1000 ~/.openclaw
+sudo chmod -R 755 ~/.openclaw
+```
+
+---
+
+## 🔒 Segurança
+
+- ✅ Token gateway gerado automaticamente com 32 bytes
+- ✅ Arquivo `.env` com permissões `600` (somente leitura do dono)
+- ✅ Credenciais salvas em arquivo separado
+- ⚠️ **NUNCA** compartilhe seu `OPENCLAW_GATEWAY_TOKEN`
+- ⚠️ **NUNCA** commite o arquivo `.env` no Git
+
+---
+
+## 📖 Documentação Oficial
+
+- [OpenClaw GitHub](https://github.com/OpenClaw/openclaw)
+- [Documentação OpenClaw](https://docs.openclaw.com)
+
+---
+
+## 🐛 Suporte
+
+- **Issues**: [GitHub Issues](https://github.com/wolfxweb/setup-openclaw/issues)
+- **OpenClaw**: [Documentação Oficial](https://docs.openclaw.com)
+
+---
+
+## 📝 Licença
+
+MIT License - Veja [LICENSE](LICENSE) para detalhes.
+
+---
+
+## ⭐ Sobre
+
+Este é um instalador não-oficial simplificado para OpenClaw.  
+OpenClaw é desenvolvido por [OpenClaw Team](https://github.com/OpenClaw/openclaw).
+
+**Versão**: 2.0.0 - Instalador Simplificado  
+**Autor**: wolfxweb  
+**Repositório**: https://github.com/wolfxweb/setup-openclaw
