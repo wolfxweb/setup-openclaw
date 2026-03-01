@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #======================================
-# OpenClaw - Instalador Simples
-# Apenas instala OpenClaw no Docker
+# OpenClaw - Instalador Simplificado v3
+# 100% Automatizado - Zero Interação
 #======================================
 
 set -e
@@ -17,8 +17,8 @@ NC='\033[0m'
 echo -e "${BLUE}"
 cat << "EOF"
 ╔═══════════════════════════════════════╗
-║   OpenClaw - Instalador Simples      ║
-║   Docker Setup - Sem Complicações    ║
+║   OpenClaw - Instalador Automático   ║
+║   Docker Setup - Zero Interação      ║
 ╚═══════════════════════════════════════╝
 EOF
 echo -e "${NC}"
@@ -26,7 +26,7 @@ echo -e "${NC}"
 #======================================
 # 1. Verificar Docker
 #======================================
-echo -e "${YELLOW}[1/7]${NC} Verificando Docker..."
+echo -e "${YELLOW}[1/8]${NC} Verificando Docker..."
 
 if ! command -v docker &> /dev/null; then
     echo -e "${RED}✗ Docker não encontrado!${NC}"
@@ -53,11 +53,11 @@ fi
 #======================================
 # 2. Limpar instalação anterior
 #======================================
-echo -e "${YELLOW}[2/7]${NC} Limpando instalação anterior..."
+echo -e "${YELLOW}[2/8]${NC} Limpando instalação anterior..."
 
 if [ -d "$HOME/.openclaw" ]; then
     echo "Removendo containers anteriores..."
-    cd "$HOME/.openclaw" 2>/dev/null && docker compose down -v 2>/dev/null || true
+    cd "$HOME/.openclaw/openclaw" 2>/dev/null && docker compose down -v 2>/dev/null || true
     cd "$HOME"
     rm -rf "$HOME/.openclaw"
     echo -e "${GREEN}✓ Limpeza concluída${NC}"
@@ -68,7 +68,7 @@ fi
 #======================================
 # 3. Criar diretórios
 #======================================
-echo -e "${YELLOW}[3/7]${NC} Criando diretórios..."
+echo -e "${YELLOW}[3/8]${NC} Criando diretórios..."
 
 mkdir -p "$HOME/.openclaw"
 mkdir -p "$HOME/.openclaw/workspace"
@@ -81,21 +81,11 @@ chmod -R 755 "$HOME/.openclaw"
 echo -e "${GREEN}✓ Diretórios criados${NC}"
 
 #======================================
-# 4. Criar .env seguro
+# 4. Gerar token seguro
 #======================================
-echo -e "${YELLOW}[4/7]${NC} Gerando credenciais seguras..."
+echo -e "${YELLOW}[4/8]${NC} Gerando credenciais seguras..."
 
 GATEWAY_TOKEN=$(openssl rand -hex 32)
-
-cat > "$HOME/.openclaw/.env" << EOF
-# OpenClaw Gateway Token (Gerado automaticamente)
-OPENCLAW_GATEWAY_TOKEN=${GATEWAY_TOKEN}
-
-# Não compartilhe este arquivo!
-EOF
-
-chmod 600 "$HOME/.openclaw/.env"
-chown 1000:1000 "$HOME/.openclaw/.env"
 
 # Salvar token em local separado para usuário
 cat > "$HOME/.openclaw-credentials.txt" << EOF
@@ -110,7 +100,7 @@ Gateway Token: ${GATEWAY_TOKEN}
 - Você precisará dele para conectar agentes
 - Não compartilhe com ninguém
 
-Arquivo .env: $HOME/.openclaw/.env
+Configuração: $HOME/.openclaw/openclaw.json
 EOF
 
 chmod 600 "$HOME/.openclaw-credentials.txt"
@@ -118,9 +108,9 @@ chmod 600 "$HOME/.openclaw-credentials.txt"
 echo -e "${GREEN}✓ Credenciais geradas${NC}"
 
 #======================================
-# 5. Clonar e instalar OpenClaw
+# 5. Clonar OpenClaw oficial
 #======================================
-echo -e "${YELLOW}[5/7]${NC} Baixando OpenClaw..."
+echo -e "${YELLOW}[5/8]${NC} Baixando OpenClaw..."
 
 cd "$HOME/.openclaw"
 
@@ -135,11 +125,10 @@ fi
 echo -e "${GREEN}✓ OpenClaw baixado${NC}"
 
 #======================================
-# 6. Limpar cache do Docker (se necessário)
+# 6. Limpar cache do Docker
 #======================================
-echo -e "${YELLOW}[6/7]${NC} Verificando cache do Docker..."
+echo -e "${YELLOW}[6/8]${NC} Verificando cache do Docker..."
 
-# Verificar se há problemas com o cache
 if docker builder ls 2>&1 | grep -q "default"; then
     echo -e "${YELLOW}⚠ Limpando cache do Docker para evitar erros...${NC}"
     docker builder prune -af --filter "until=1h" 2>/dev/null || true
@@ -149,129 +138,91 @@ else
 fi
 
 #======================================
-# 7. Executar setup do OpenClaw
+# 7. Build da imagem Docker
 #======================================
-echo -e "${YELLOW}[7/7]${NC} Iniciando setup do OpenClaw..."
-echo ""
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}⚠️  ATENÇÃO - Siga as instruções:${NC}"
-echo ""
-echo "1. O wizard do OpenClaw vai abrir"
-echo "2. Quando pedir URL de callback OAuth:"
-echo "   ${GREEN}Use o IP desta VPS${NC}"
-echo "   Exemplo: http://SEU_IP:1455"
-echo ""
-echo "3. Após autorizar na OpenAI:"
-echo "   ${GREEN}Copie a URL completa do navegador${NC}"
-echo "   ${GREEN}Cole no terminal quando solicitado${NC}"
-echo ""
-echo "4. Se o build falhar com erro de snapshot:"
-echo "   ${YELLOW}Execute: docker builder prune -af${NC}"
-echo "   ${YELLOW}E rode o instalador novamente${NC}"
-echo ""
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-read -p "Pressione ENTER para continuar..."
+echo -e "${YELLOW}[7/8]${NC} Compilando OpenClaw..."
 
-# Garantir permissões antes do setup
-chown -R 1000:1000 "$HOME/.openclaw"
-chmod -R 755 "$HOME/.openclaw"
+export OPENCLAW_CONFIG_DIR="$HOME/.openclaw"
+export OPENCLAW_WORKSPACE_DIR="$HOME/.openclaw/workspace"
+export OPENCLAW_GATEWAY_PORT=18789
+export OPENCLAW_GATEWAY_BIND=lan
+export OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN"
+export OPENCLAW_IMAGE=openclaw:local
 
-echo ""
-echo -e "${GREEN}✓ Iniciando instalação automática do OpenClaw${NC}"
-echo ""
-sleep 2
-
-# Verificar se expect está instalado
-if ! command -v expect &> /dev/null; then
-    echo -e "${YELLOW}⚠ Instalando expect...${NC}"
-    apt-get update -qq && apt-get install -y expect -qq > /dev/null 2>&1
-    echo -e "${GREEN}✓ Expect instalado${NC}"
-fi
-
-# Criar script expect para automatizar o wizard
-cat > /tmp/openclaw-install.exp << 'EXPECTEOF'
-#!/usr/bin/expect -f
-
-set timeout 300
-set gateway_token [lindex $argv 0]
-
-spawn bash docker-setup.sh
-
-# Aguardar aviso de segurança
-expect {
-    "Continue?" {
-        send "y\r"
-        exp_continue
-    }
-    "Onboarding mode" {
-        send "\r"
-        exp_continue
-    }
-    "Which AI providers" {
-        send " "
-        send "\r"
-        exp_continue
-    }
-    "OpenAI OAuth callback URL" {
-        send "http://localhost:1455\r"
-        exp_continue
-    }
-    "paste the full callback URL" {
-        send_user "\n\n"
-        send_user "==========================================================\n"
-        send_user "⚠️  ATENÇÃO: Configure OAuth manualmente\n"
-        send_user "==========================================================\n"
-        send_user "1. Abra o navegador no link que apareceu acima\n"
-        send_user "2. Autorize o OpenClaw na OpenAI\n"
-        send_user "3. Copie a URL completa que aparece no navegador\n"
-        send_user "4. Cole aqui no terminal\n"
-        send_user "==========================================================\n\n"
-        interact
-        return
-    }
-    eof {
-        exit 0
-    }
-    timeout {
-        send_user "\n\nTimeout - instalação manual necessária\n"
-        exit 1
-    }
-}
-
-interact
-EXPECTEOF
-
-chmod +x /tmp/openclaw-install.exp
-
-# Executar instalação automatizada
-GATEWAY_TOKEN=$(cat "$HOME/.openclaw/.env" | grep OPENCLAW_GATEWAY_TOKEN | cut -d'=' -f2)
-
-echo -e "${BLUE}Executando instalação automatizada...${NC}"
-/tmp/openclaw-install.exp "$GATEWAY_TOKEN" || {
-    echo ""
-    echo -e "${RED}✗ Erro durante a instalação automática${NC}"
-    echo ""
-    echo -e "${YELLOW}Alternativa - Instalação Manual:${NC}"
-    echo -e "${BLUE}1. cd ~/.openclaw/openclaw${NC}"
-    echo -e "${BLUE}2. bash docker-setup.sh${NC}"
-    echo -e "${BLUE}3. Responda 'Yes' à confirmação de segurança${NC}"
-    echo -e "${BLUE}4. Escolha 'QuickStart' (use setas + ENTER)${NC}"
-    echo -e "${BLUE}5. Configure OAuth com OpenAI${NC}"
-    echo ""
-    rm -f /tmp/openclaw-install.exp
+echo -e "${BLUE}Building Docker image: openclaw:local${NC}"
+docker build -t openclaw:local -f Dockerfile . || {
+    echo -e "${RED}✗ Erro no build do Docker${NC}"
     exit 1
 }
 
-# Limpar arquivo temporário
-rm -f /tmp/openclaw-install.exp
+echo -e "${GREEN}✓ Build concluído${NC}"
+
+#======================================
+# 8. Configurar OpenClaw (sem wizard)
+#======================================
+echo -e "${YELLOW}[8/8]${NC} Configurando OpenClaw automaticamente..."
+
+# Criar arquivo de configuração diretamente
+cat > "$HOME/.openclaw/openclaw.json" << JSONEOF
+{
+  "gateway": {
+    "bind": "lan",
+    "port": 18789,
+    "auth": {
+      "token": "$GATEWAY_TOKEN"
+    },
+    "controlUi": {
+      "allowedOrigins": ["http://127.0.0.1:18789"]
+    }
+  },
+  "workspace": {
+    "root": "$HOME/.openclaw/workspace"
+  },
+  "agents": {
+    "default": {
+      "model": "openai:gpt-4"
+    }
+  }
+}
+JSONEOF
+
+chmod 600 "$HOME/.openclaw/openclaw.json"
+chown 1000:1000 "$HOME/.openclaw/openclaw.json"
+
+echo -e "${GREEN}✓ Configuração criada${NC}"
+
+# Criar docker-compose.yml simplificado
+cat > docker-compose.override.yml << COMPOSEEOF
+services:
+  openclaw-gateway:
+    image: openclaw:local
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18789:18789"
+    volumes:
+      - $HOME/.openclaw:/home/node/.openclaw
+    environment:
+      - OPENCLAW_CONFIG_DIR=/home/node/.openclaw
+      - OPENCLAW_WORKSPACE_DIR=/home/node/.openclaw/workspace
+      - OPENCLAW_GATEWAY_TOKEN=$GATEWAY_TOKEN
+      - OPENCLAW_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_BIND=lan
+    user: "1000:1000"
+    command: ["gateway", "--port", "18789", "--bind", "lan"]
+COMPOSEEOF
+
+echo -e "${BLUE}Iniciando gateway...${NC}"
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d openclaw-gateway
+
+echo -e "${GREEN}✓ Gateway iniciado${NC}"
 
 #======================================
 # Finalização
 #======================================
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✓ Instalação concluída!${NC}"
+echo -e "${GREEN}✓ Instalação concluída com sucesso!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}📋 Informações importantes:${NC}"
@@ -280,15 +231,23 @@ echo "Gateway Token salvo em:"
 echo "  → $HOME/.openclaw-credentials.txt"
 echo ""
 echo "Verificar status:"
-echo "  → cd ~/.openclaw/openclaw && docker compose ps"
+echo "  → docker ps | grep openclaw"
 echo ""
 echo "Ver logs:"
-echo "  → cd ~/.openclaw/openclaw && docker compose logs -f"
+echo "  → docker logs -f openclaw-gateway"
 echo ""
 echo "Parar:"
-echo "  → cd ~/.openclaw/openclaw && docker compose down"
+echo "  → docker stop openclaw-gateway"
 echo ""
 echo "Iniciar:"
-echo "  → cd ~/.openclaw/openclaw && docker compose up -d"
+echo "  → docker start openclaw-gateway"
+echo ""
+echo "Acessar dashboard:"
+echo "  → http://localhost:18789"
+echo "  → Token: ${GATEWAY_TOKEN:0:16}..."
+echo ""
+echo -e "${YELLOW}⚠️  Próximos passos:${NC}"
+echo "1. Configure providers (OpenAI, Anthropic, etc):"
+echo "   → docker exec -it openclaw-gateway openclaw configure"
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
