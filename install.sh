@@ -26,7 +26,7 @@ echo -e "${NC}"
 #======================================
 # 1. Verificar Docker
 #======================================
-echo -e "${YELLOW}[1/6]${NC} Verificando Docker..."
+echo -e "${YELLOW}[1/7]${NC} Verificando Docker..."
 
 if ! command -v docker &> /dev/null; then
     echo -e "${RED}✗ Docker não encontrado!${NC}"
@@ -53,7 +53,7 @@ fi
 #======================================
 # 2. Limpar instalação anterior
 #======================================
-echo -e "${YELLOW}[2/6]${NC} Limpando instalação anterior..."
+echo -e "${YELLOW}[2/7]${NC} Limpando instalação anterior..."
 
 if [ -d "$HOME/.openclaw" ]; then
     echo "Removendo containers anteriores..."
@@ -68,7 +68,7 @@ fi
 #======================================
 # 3. Criar diretórios
 #======================================
-echo -e "${YELLOW}[3/6]${NC} Criando diretórios..."
+echo -e "${YELLOW}[3/7]${NC} Criando diretórios..."
 
 mkdir -p "$HOME/.openclaw"
 mkdir -p "$HOME/.openclaw/workspace"
@@ -83,7 +83,7 @@ echo -e "${GREEN}✓ Diretórios criados${NC}"
 #======================================
 # 4. Criar .env seguro
 #======================================
-echo -e "${YELLOW}[4/6]${NC} Gerando credenciais seguras..."
+echo -e "${YELLOW}[4/7]${NC} Gerando credenciais seguras..."
 
 GATEWAY_TOKEN=$(openssl rand -hex 32)
 
@@ -120,7 +120,7 @@ echo -e "${GREEN}✓ Credenciais geradas${NC}"
 #======================================
 # 5. Clonar e instalar OpenClaw
 #======================================
-echo -e "${YELLOW}[5/6]${NC} Baixando OpenClaw..."
+echo -e "${YELLOW}[5/7]${NC} Baixando OpenClaw..."
 
 cd "$HOME/.openclaw"
 
@@ -135,9 +135,23 @@ fi
 echo -e "${GREEN}✓ OpenClaw baixado${NC}"
 
 #======================================
-# 6. Executar setup do OpenClaw
+# 6. Limpar cache do Docker (se necessário)
 #======================================
-echo -e "${YELLOW}[6/6]${NC} Iniciando setup do OpenClaw..."
+echo -e "${YELLOW}[6/7]${NC} Verificando cache do Docker..."
+
+# Verificar se há problemas com o cache
+if docker builder ls 2>&1 | grep -q "default"; then
+    echo -e "${YELLOW}⚠ Limpando cache do Docker para evitar erros...${NC}"
+    docker builder prune -af --filter "until=1h" 2>/dev/null || true
+    echo -e "${GREEN}✓ Cache limpo${NC}"
+else
+    echo -e "${GREEN}✓ Cache OK${NC}"
+fi
+
+#======================================
+# 7. Executar setup do OpenClaw
+#======================================
+echo -e "${YELLOW}[7/7]${NC} Iniciando setup do OpenClaw..."
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}⚠️  ATENÇÃO - Siga as instruções:${NC}"
@@ -150,6 +164,10 @@ echo ""
 echo "3. Após autorizar na OpenAI:"
 echo "   ${GREEN}Copie a URL completa do navegador${NC}"
 echo "   ${GREEN}Cole no terminal quando solicitado${NC}"
+echo ""
+echo "4. Se o build falhar com erro de snapshot:"
+echo "   ${YELLOW}Execute: docker builder prune -af${NC}"
+echo "   ${YELLOW}E rode o instalador novamente${NC}"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
