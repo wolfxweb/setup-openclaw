@@ -177,8 +177,28 @@ read -p "Pressione ENTER para continuar..."
 chown -R 1000:1000 "$HOME/.openclaw"
 chmod -R 755 "$HOME/.openclaw"
 
-# Executar o setup oficial do OpenClaw
-bash docker-setup.sh
+echo ""
+echo -e "${GREEN}✓ Iniciando instalação automática${NC}"
+echo -e "${BLUE}  Configurações padrão:${NC}"
+echo -e "${BLUE}  - Gateway bind: lan${NC}"
+echo -e "${BLUE}  - Gateway auth: token${NC}"
+echo -e "${BLUE}  - Tailscale: off${NC}"
+echo -e "${BLUE}  - Daemon: no${NC}"
+echo ""
+echo -e "${YELLOW}⚠️  O wizard vai pedir confirmação de segurança${NC}"
+echo -e "${YELLOW}  Respondendo 'yes' automaticamente...${NC}"
+echo ""
+sleep 2
+
+# Executar o setup oficial do OpenClaw com respostas automáticas
+# yes responde automaticamente "y" para todas as perguntas
+yes | bash docker-setup.sh || {
+    echo ""
+    echo -e "${RED}✗ Erro durante a instalação${NC}"
+    echo -e "${YELLOW}Tente executar manualmente:${NC}"
+    echo -e "${BLUE}cd ~/.openclaw/openclaw && bash docker-setup.sh${NC}"
+    exit 1
+}
 
 #======================================
 # Finalização
